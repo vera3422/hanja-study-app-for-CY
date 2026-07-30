@@ -58,19 +58,13 @@ def check_answer(
                _clean_text(submitted) in _clean_text(correct_eum)
 
     # ==================== 1-1 객관식 Mode ====================
-    # joined 문자열 우선
+    # 객관식은 옵션 전체 문자열(correct_hun_eum)과 exact match
+    # (멀티 reading을 부분 매칭하면 공유 부분이 있는 오답이 정답 처리되는 문제 방지)
     if correct_hun_eum:
-        possibles = []
-        for sep in ['/', ' / ']:
-            possibles.extend([p.strip() for p in correct_hun_eum.split(sep) if p.strip()])
-        
-        return any(
-            submitted == p or 
-            submitted in p or 
-            p in submitted or
-            submitted.replace(' ', '') == p.replace(' ', '') 
-            for p in possibles
-        )
+        # 공백 차이만 허용 (예: "학교 교:" vs "학교교:")
+        submitted_norm = re.sub(r'\s+', '', submitted)
+        correct_norm = re.sub(r'\s+', '', correct_hun_eum)
+        return submitted == correct_hun_eum or submitted_norm == correct_norm
 
     # 기타 fallback
     if hun_eum_list:

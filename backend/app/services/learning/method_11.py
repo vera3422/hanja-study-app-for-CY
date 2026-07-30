@@ -6,11 +6,8 @@ import random
 from app.services.data_loader import df
 from app.services.srs import srs_manager
 from app.services.grade_range import get_grade_range
-from app.services.checker import check_answer
-from .base import LearningMethod
-
 from app.services.checker import check_answer, _get_joined_option
-
+from .base import LearningMethod
 
 class Method11(LearningMethod):
     """1-1: 한자 → 훈/음 (객관식 5지선다)"""
@@ -34,9 +31,24 @@ class Method11(LearningMethod):
         hanja_info = df[df['한자'] == question['한자']].to_dict('records')[0]
         correct_option = _get_joined_option(hanja_info)
 
-        # 오답 생성
-        same_grade = df[df['급수'] == hanja_info['급수']].sample(4)
-        wrong_options = [_get_joined_option(row) for _, row in same_grade.iterrows() if _get_joined_option(row)]
+        # 오답 생성: 같은 급수에서 정답 한자 제외 + 중복 없는 joined 옵션만
+        candidates = df[
+            (df['급수'] == hanja_info['급수']) &
+            (df['한자'] != hanja_info['한자'])
+        ]
+        wrong_options = []
+        seen = {correct_option}
+
+        # 충분한 후보를 섞어서 중복 없는 4개까지 수집
+        if len(candidates) > 0:
+            sample_size = min(30, len(candidates))
+            for _, row in candidates.sample(sample_size).iterrows():
+                opt = _get_joined_option(row)
+                if opt and opt not in seen:
+                    wrong_options.append(opt)
+                    seen.add(opt)
+                if len(wrong_options) >= 4:
+                    break
 
         options = [correct_option] + wrong_options[:4]
         random.shuffle(options)

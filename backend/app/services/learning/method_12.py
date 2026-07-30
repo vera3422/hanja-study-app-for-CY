@@ -5,10 +5,8 @@ import random
 from app.services.data_loader import df
 from app.services.srs import srs_manager
 from app.services.grade_range import get_grade_range
-from app.services.checker import check_answer
-from .base import LearningMethod
-
 from app.services.checker import check_answer, _get_joined_option
+from .base import LearningMethod
 
 class Method12(LearningMethod):
     """1-2: 한자 → 훈/음 (타이핑 입력)"""

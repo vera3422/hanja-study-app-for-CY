@@ -29,7 +29,8 @@ export default function Method11({ selectedLevel, onBackToMenu }: MethodProps) {
       setCorrectAnswer(null);
     } catch (err) {
       console.error(err);
-      alert('문제를 불러오는 데 실패했습니다.');
+      const message = err instanceof Error ? err.message : String(err);
+      alert(`문제를 불러오는 데 실패했습니다.\n\n원인: ${message}`);
     } finally {
       setIsLoading(false);
     }

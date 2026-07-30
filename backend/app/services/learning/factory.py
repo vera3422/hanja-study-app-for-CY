@@ -1,17 +1,16 @@
 # app/services/learning/factory.py
 from .method_11 import Method11
 from .method_12 import Method12
-# 2-1, 2-2는 나중에 추가
-# from .method_21 import Method21
-# from .method_22 import Method22
+from .method_21 import Method21
+from .method_22 import Method22
 
 from .base import LearningMethod
 
 _METHODS = {
     "1-1": Method11(),
     "1-2": Method12(),
-    # "2-1": Method21(),
-    # "2-2": Method22(),
+    "2-1": Method21(),
+    "2-2": Method22(),
 }
 
 def get_learning_method(method: str) -> LearningMethod:
