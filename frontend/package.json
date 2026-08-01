@@ -12,6 +12,7 @@
     "deploy": "gh-pages -d dist"
   },
   "dependencies": {
+    "hanzilookup-js": "^1.0.3",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
   },

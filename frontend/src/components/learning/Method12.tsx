@@ -61,32 +61,36 @@ export default function Method12({ selectedLevel, onBackToMenu }: MethodProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 sm:p-6">
       <div className="text-center max-w-md w-full">
-        <div className="text-6xl mb-6">⌨️</div>
-        <h2 className="text-4xl font-bold mb-4">{selectedLevel} 학습 (1-2 타이핑)</h2>
+        <div className="text-4xl sm:text-5xl md:text-6xl mb-4 sm:mb-6">⌨️</div>
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">
+          {selectedLevel} 학습 (1-2 타이핑)
+        </h2>
 
         {currentQuestion ? (
-          <div className="bg-white p-8 rounded-3xl shadow">
-            <p className="text-[180px] mb-10 font-bold leading-none">{currentQuestion.hanja}</p>
+          <div className="bg-white p-5 sm:p-8 rounded-2xl sm:rounded-3xl shadow">
+            <p className="text-[100px] sm:text-[140px] md:text-[180px] mb-6 sm:mb-10 font-bold leading-none">
+              {currentQuestion.hanja}
+            </p>
 
             <input
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder="훈·음을 입력하세요 (예: 학교 교)"
-              className="w-full py-5 px-6 rounded-2xl text-xl border-2 border-gray-200 focus:border-indigo-500 focus:outline-none mb-6"
+              className="w-full py-3 sm:py-5 px-4 sm:px-6 rounded-xl sm:rounded-2xl text-base sm:text-xl border-2 border-gray-200 focus:border-indigo-500 focus:outline-none mb-4 sm:mb-6"
               disabled={!!feedback}
             />
 
             {feedback && (
-              <div className={`text-3xl font-bold mb-6 ${feedback.color}`}>
+              <div className={`text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 ${feedback.color}`}>
                 {feedback.message}
               </div>
             )}
 
             {feedback && correctAnswer && (
-              <div className="text-2xl font-medium text-red-600 mt-4 p-4 bg-red-50 rounded-2xl border border-red-200">
+              <div className="text-lg sm:text-2xl font-medium text-red-600 mt-3 sm:mt-4 p-3 sm:p-4 bg-red-50 rounded-xl sm:rounded-2xl border border-red-200">
                 정답: {correctAnswer}
               </div>
             )}
@@ -102,7 +106,7 @@ export default function Method12({ selectedLevel, onBackToMenu }: MethodProps) {
                 }
               }}
               disabled={!inputValue.trim() && !feedback}
-              className="w-full py-5 bg-indigo-600 text-white rounded-3xl text-xl font-medium disabled:bg-gray-300 disabled:cursor-not-allowed"
+              className="w-full py-3 sm:py-5 bg-indigo-600 text-white rounded-2xl sm:rounded-3xl text-base sm:text-xl font-medium disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
               {feedback ? "다음 문제" : "제출"}
             </button>
@@ -111,7 +115,7 @@ export default function Method12({ selectedLevel, onBackToMenu }: MethodProps) {
           <button
             onClick={fetchNextQuestion}
             disabled={isLoading}
-            className="px-10 py-5 bg-indigo-600 text-white rounded-3xl text-xl font-medium w-full"
+            className="px-8 sm:px-10 py-3 sm:py-5 bg-indigo-600 text-white rounded-2xl sm:rounded-3xl text-base sm:text-xl font-medium w-full"
           >
             {isLoading ? "문제 불러오는 중..." : "문제 시작하기"}
           </button>
@@ -119,7 +123,7 @@ export default function Method12({ selectedLevel, onBackToMenu }: MethodProps) {
 
         <button
           onClick={onBackToMenu}
-          className="mt-6 text-gray-500 underline"
+          className="mt-4 sm:mt-6 text-gray-500 underline text-sm sm:text-base"
         >
           ← 메뉴로 돌아가기
         </button>

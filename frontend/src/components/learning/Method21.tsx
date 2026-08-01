@@ -63,19 +63,23 @@ export default function Method21({ selectedLevel, onBackToMenu }: MethodProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 sm:p-6">
       <div className="text-center max-w-md w-full">
-        <div className="text-6xl mb-6">🔍</div>
-        <h2 className="text-4xl font-bold mb-4">{selectedLevel} 학습 (2-1 훈/음 → 한자)</h2>
+        <div className="text-4xl sm:text-5xl md:text-6xl mb-4 sm:mb-6">🔍</div>
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">
+          {selectedLevel} 학습 (2-1 훈/음 → 한자)
+        </h2>
 
         {currentQuestion ? (
-          <div className="bg-white p-8 rounded-3xl shadow">
-            <p className="text-xl font-medium mb-4 text-gray-600">다음 뜻·음의 한자를 선택하세요</p>
-            <p className="text-4xl mb-10 font-bold text-indigo-700 leading-relaxed">
+          <div className="bg-white p-5 sm:p-8 rounded-2xl sm:rounded-3xl shadow">
+            <p className="text-base sm:text-xl font-medium mb-3 sm:mb-4 text-gray-600">
+              다음 뜻·음의 한자를 선택하세요
+            </p>
+            <p className="text-2xl sm:text-3xl md:text-4xl mb-6 sm:mb-10 font-bold text-indigo-700 leading-relaxed">
               {(currentQuestion as any).question_text || currentQuestion.correct_hun_eum}
             </p>
 
-            <div className="space-y-3 mb-8 text-left">
+            <div className="space-y-2 sm:space-y-3 mb-6 sm:mb-8 text-left">
               {options.map((option, idx) => {
                 const isSelected = selectedOption === option;
                 const isCorrect = correctAnswer && option === correctAnswer;
@@ -86,7 +90,7 @@ export default function Method21({ selectedLevel, onBackToMenu }: MethodProps) {
                     key={idx}
                     onClick={() => !feedback && setSelectedOption(option)}
                     disabled={!!feedback}
-                    className={`w-full flex items-center gap-4 py-5 px-6 rounded-2xl text-left transition-all text-3xl border-2 ${
+                    className={`w-full flex items-center gap-3 sm:gap-4 py-3 sm:py-5 px-4 sm:px-6 rounded-xl sm:rounded-2xl text-left transition-all text-2xl sm:text-3xl border-2 ${
                       isCorrect
                         ? 'bg-red-600 text-white font-bold border-red-700'
                         : isSelected
@@ -94,7 +98,7 @@ export default function Method21({ selectedLevel, onBackToMenu }: MethodProps) {
                         : 'bg-white border-gray-200 hover:border-indigo-400 hover:bg-indigo-50'
                     }`}
                   >
-                    <span className="text-2xl flex-shrink-0 w-8">{number}</span>
+                    <span className="text-xl sm:text-2xl flex-shrink-0 w-7 sm:w-8">{number}</span>
                     <span>{option}</span>
                   </button>
                 );
@@ -102,7 +106,7 @@ export default function Method21({ selectedLevel, onBackToMenu }: MethodProps) {
             </div>
 
             {feedback && (
-              <div className={`text-3xl font-bold mb-6 ${feedback.color}`}>
+              <div className={`text-2xl sm:text-3xl font-bold mb-4 sm:mb-6 ${feedback.color}`}>
                 {feedback.message}
               </div>
             )}
@@ -118,7 +122,7 @@ export default function Method21({ selectedLevel, onBackToMenu }: MethodProps) {
                 }
               }}
               disabled={!selectedOption && !feedback}
-              className="w-full py-5 bg-indigo-600 text-white rounded-3xl text-xl font-medium disabled:bg-gray-300 disabled:cursor-not-allowed"
+              className="w-full py-3 sm:py-5 bg-indigo-600 text-white rounded-2xl sm:rounded-3xl text-base sm:text-xl font-medium disabled:bg-gray-300 disabled:cursor-not-allowed"
             >
               {feedback ? "다음 문제" : "답안 제출"}
             </button>
@@ -127,7 +131,7 @@ export default function Method21({ selectedLevel, onBackToMenu }: MethodProps) {
           <button
             onClick={fetchNextQuestion}
             disabled={isLoading}
-            className="px-10 py-5 bg-indigo-600 text-white rounded-3xl text-xl font-medium w-full"
+            className="px-8 sm:px-10 py-3 sm:py-5 bg-indigo-600 text-white rounded-2xl sm:rounded-3xl text-base sm:text-xl font-medium w-full"
           >
             {isLoading ? "문제 불러오는 중..." : "문제 시작하기"}
           </button>
@@ -135,7 +139,7 @@ export default function Method21({ selectedLevel, onBackToMenu }: MethodProps) {
 
         <button
           onClick={onBackToMenu}
-          className="mt-6 text-gray-500 underline"
+          className="mt-4 sm:mt-6 text-gray-500 underline text-sm sm:text-base"
         >
           ← 메뉴로 돌아가기
         </button>
