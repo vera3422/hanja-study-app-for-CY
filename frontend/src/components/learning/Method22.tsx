@@ -260,15 +260,16 @@ export default function Method22({ selectedLevel, onBackToMenu }: MethodProps) {
             {/* pick 모드: 인식 후보 선택 */}
             {candidates && !feedback && (
               <div className="mb-4 sm:mb-6">
-                <p className="text-sm sm:text-base text-gray-600 mb-2">인식된 후보 중 선택하세요</p>
-                <div className="flex flex-wrap justify-center gap-2 sm:gap-3">
-                  {candidates.map((char) => (
+                <p className="text-sm sm:text-base text-gray-600 mb-3">인식된 후보 중 선택하세요</p>
+                {/* 윗줄 4개 + 아랫줄 4개 */}
+                <div className="grid grid-cols-4 gap-2 sm:gap-3 max-w-xs sm:max-w-sm mx-auto">
+                  {candidates.slice(0, 8).map((char) => (
                     <button
                       key={char}
                       type="button"
                       onClick={() => handlePickCandidate(char)}
                       disabled={isSubmitting}
-                      className="min-w-[3rem] sm:min-w-[3.5rem] h-12 sm:h-14 px-3 rounded-xl border-2 border-indigo-200 bg-indigo-50 text-2xl sm:text-3xl font-bold text-indigo-800 hover:bg-indigo-100 disabled:opacity-50"
+                      className="aspect-square flex items-center justify-center rounded-xl border-2 border-indigo-200 bg-indigo-50 text-3xl sm:text-4xl font-bold text-indigo-800 hover:bg-indigo-100 disabled:opacity-50"
                     >
                       {char}
                     </button>

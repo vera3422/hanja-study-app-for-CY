@@ -51,9 +51,10 @@ export default function Method12({ selectedLevel, onBackToMenu }: MethodProps) {
         color: result.correct ? 'text-green-600' : 'text-red-600',
       });
 
-      if (!result.correct && result.correct_answer) {
-        setCorrectAnswer(result.correct_answer);
-      }
+      // 정답·오답 모두 정답 훈/음 표시
+      setCorrectAnswer(
+        result.correct_answer || currentQuestion.correct_hun_eum || null
+      );
     } catch (err) {
       console.error(err);
       setFeedback({ message: "제출 중 오류가 발생했습니다.", color: 'text-red-600' });
@@ -90,7 +91,13 @@ export default function Method12({ selectedLevel, onBackToMenu }: MethodProps) {
             )}
 
             {feedback && correctAnswer && (
-              <div className="text-lg sm:text-2xl font-medium text-red-600 mt-3 sm:mt-4 p-3 sm:p-4 bg-red-50 rounded-xl sm:rounded-2xl border border-red-200">
+              <div
+                className={`text-lg sm:text-2xl font-medium mt-3 sm:mt-4 p-3 sm:p-4 rounded-xl sm:rounded-2xl border ${
+                  feedback.color === 'text-green-600'
+                    ? 'text-green-700 bg-green-50 border-green-200'
+                    : 'text-red-600 bg-red-50 border-red-200'
+                }`}
+              >
                 정답: {correctAnswer}
               </div>
             )}
