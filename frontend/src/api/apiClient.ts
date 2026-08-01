@@ -1,4 +1,6 @@
-const API_BASE_URL = 'https://hanja-study-app-for-cy-backend.onrender.com';
+const API_BASE_URL = import.meta.env.PROD
+  ? 'https://hanja-study-app-for-cy-backend.onrender.com'  // 배포(GitHub Pages)용
+  : 'http://127.0.0.1:8000'; //로컬 개발용
 
 export interface QuestionResponse {
   hanja?: string;
