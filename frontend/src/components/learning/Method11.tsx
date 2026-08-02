@@ -1,5 +1,6 @@
 import { useState } from 'react'; //useEffect
 import { apiClient, type QuestionResponse } from '../../api/apiClient';
+import HanjaDictLink from './HanjaDictLink';
 
 interface MethodProps {
   selectedLevel: string;
@@ -73,9 +74,19 @@ export default function Method11({ selectedLevel, onBackToMenu }: MethodProps) {
 
         {currentQuestion ? (
           <div className="bg-white p-5 sm:p-8 rounded-2xl sm:rounded-3xl shadow">
-            <p className="text-[100px] sm:text-[140px] md:text-[180px] mb-6 sm:mb-10 font-bold leading-none">
-              {currentQuestion.hanja}
-            </p>
+            {/* 정답 제출/확인 후 한자 왼쪽에 네이버 한자사전 링크 (반응형) */}
+            <div className="flex items-center justify-center gap-2 sm:gap-3 md:gap-4 mb-6 sm:mb-10">
+              {feedback && currentQuestion.hanja ? (
+                <HanjaDictLink hanja={currentQuestion.hanja} className="flex-shrink-0" />
+              ) : (
+                <span className="w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0 invisible" aria-hidden />
+              )}
+              <p className="text-[100px] sm:text-[140px] md:text-[180px] font-bold leading-none">
+                {currentQuestion.hanja}
+              </p>
+              {/* 좌우 균형용 더미 (한자 중앙 정렬 유지) */}
+              <span className="w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0 invisible" aria-hidden />
+            </div>
 
             <div className="space-y-2 sm:space-y-3 mb-6 sm:mb-8 text-left">
               <p className="text-base sm:text-xl font-medium mb-4 sm:mb-6 text-center">

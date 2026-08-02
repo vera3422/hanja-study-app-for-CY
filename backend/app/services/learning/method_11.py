@@ -9,6 +9,7 @@ from app.services.grade_range import get_grade_range
 from app.services.checker import check_answer, _get_joined_option
 from .base import LearningMethod
 
+
 class Method11(LearningMethod):
     """1-1: 한자 → 훈/음 (객관식 5지선다)"""
 
@@ -20,26 +21,24 @@ class Method11(LearningMethod):
         target_grades = get_grade_range(selected_grade, mode=1)
 
         for grade in target_grades:
-            grade_hanja = df[df['급수'] == grade].to_dict('records')
+            grade_hanja = df[df["급수"] == grade].to_dict("records")
             if grade_hanja:
-                srs_manager.initialize_weights(grade_hanja, user_id, grade)
+                srs_manager.initialize_weights(grade_hanja, user_id, grade, method=self.method_id)
 
-        question = srs_manager.get_next_question(user_id, target_grades)
+        question = srs_manager.get_next_question(user_id, target_grades, method=self.method_id)
         if not question:
             return {"error": "문제를 찾을 수 없습니다."}
 
-        hanja_info = df[df['한자'] == question['한자']].to_dict('records')[0]
+        hanja_info = df[df["한자"] == question["한자"]].to_dict("records")[0]
         correct_option = _get_joined_option(hanja_info)
 
-        # 오답 생성: 같은 급수에서 정답 한자 제외 + 중복 없는 joined 옵션만
         candidates = df[
-            (df['급수'] == hanja_info['급수']) &
-            (df['한자'] != hanja_info['한자'])
+            (df["급수"] == hanja_info["급수"]) &
+            (df["한자"] != hanja_info["한자"])
         ]
         wrong_options = []
         seen = {correct_option}
 
-        # 충분한 후보를 섞어서 중복 없는 4개까지 수집
         if len(candidates) > 0:
             sample_size = min(30, len(candidates))
             for _, row in candidates.sample(sample_size).iterrows():
@@ -54,9 +53,9 @@ class Method11(LearningMethod):
         random.shuffle(options)
 
         return {
-            "hanja": hanja_info['한자'],
+            "hanja": hanja_info["한자"],
             "correct_hun_eum": correct_option,
-            "grade": question['grade'],
+            "grade": question["grade"],
             "method": self.method_id,
             "options": options,
             "correct_option": correct_option,
@@ -70,7 +69,7 @@ class Method11(LearningMethod):
         submitted: str,
         **kwargs
     ) -> Dict[str, Any]:
-        hanja_info = df[df['한자'] == hanja].to_dict('records')
+        hanja_info = df[df["한자"] == hanja].to_dict("records")
         if not hanja_info:
             return {"error": "한자를 찾을 수 없습니다."}
 
@@ -83,7 +82,7 @@ class Method11(LearningMethod):
             correct_hun_eum=correct_option
         )
 
-        srs_manager.update_weight(user_id, grade, hanja, correct)
+        srs_manager.update_weight(user_id, grade, hanja, correct, method=self.method_id)
 
         return {
             "status": "success",

@@ -19,13 +19,13 @@ class Method12(LearningMethod):
         """한자 제시 + 정답만 반환 (타이핑용)"""
         target_grades = get_grade_range(selected_grade, mode=1)
 
-        # SRS 초기화
+        # SRS 초기화 (학습 방법별로 분리 저장)
         for grade in target_grades:
             grade_hanja = df[df['급수'] == grade].to_dict('records')
             if grade_hanja:
-                srs_manager.initialize_weights(grade_hanja, user_id, grade)
+                srs_manager.initialize_weights(grade_hanja, user_id, grade, method=self.method_id)
 
-        question = srs_manager.get_next_question(user_id, target_grades)
+        question = srs_manager.get_next_question(user_id, target_grades, method=self.method_id)
         if not question:
             return {"error": "문제를 찾을 수 없습니다."}
 
@@ -62,8 +62,8 @@ class Method12(LearningMethod):
             correct_hun_eum=correct_option
         )
 
-        # SRS 업데이트
-        srs_manager.update_weight(user_id, grade, hanja, correct)
+        # SRS 업데이트 (학습 방법별로 분리 저장)
+        srs_manager.update_weight(user_id, grade, hanja, correct, method=self.method_id)
 
         return {
             "status": "success",

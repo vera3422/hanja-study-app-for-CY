@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { apiClient, type QuestionResponse } from '../../api/apiClient';
 import HandwritingPad, { type HandwritingPadHandle } from './HandwritingPad';
 import { recognizeHanja } from '../../lib/hanjaRecognizer';
+import HanjaDictLink from './HanjaDictLink';
 
 interface MethodProps {
   selectedLevel: string;
@@ -224,9 +225,19 @@ export default function Method22({ selectedLevel, onBackToMenu }: MethodProps) {
             <p className="text-base sm:text-xl font-medium mb-3 sm:mb-4 text-gray-600">
               다음 뜻·음의 한자를 쓰세요
             </p>
-            <p className="text-2xl sm:text-3xl md:text-4xl mb-4 sm:mb-6 font-bold text-indigo-700 leading-relaxed">
-              {(currentQuestion as any).question_text || currentQuestion.correct_hun_eum}
-            </p>
+            {/* 정답 제출/확인 후 문제(훈·음) 왼쪽에 네이버 한자사전 링크 (반응형) */}
+            <div className="flex items-center justify-center gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6">
+              {feedback && currentQuestion.hanja ? (
+                <HanjaDictLink hanja={currentQuestion.hanja} className="flex-shrink-0" />
+              ) : (
+                <span className="w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0 invisible" aria-hidden />
+              )}
+              <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-indigo-700 leading-relaxed">
+                {(currentQuestion as any).question_text || currentQuestion.correct_hun_eum}
+              </p>
+              {/* 좌우 균형용 더미 (문제 텍스트 중앙 정렬 유지) */}
+              <span className="w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0 invisible" aria-hidden />
+            </div>
 
             {/* 필기 캔버스 — 오답 후에도 그대로 유지 (비교용) */}
             <HandwritingPad

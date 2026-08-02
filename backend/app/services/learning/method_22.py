@@ -25,9 +25,9 @@ class Method22(LearningMethod):
         for grade in target_grades:
             grade_hanja = df[df['급수'] == grade].to_dict('records')
             if grade_hanja:
-                srs_manager.initialize_weights(grade_hanja, user_id, grade)
+                srs_manager.initialize_weights(grade_hanja, user_id, grade, method=self.method_id)
 
-        question = srs_manager.get_next_question(user_id, target_grades)
+        question = srs_manager.get_next_question(user_id, target_grades, method=self.method_id)
         if not question:
             return {"error": "문제를 찾을 수 없습니다. (해당 등급 범위에 한자가 부족할 수 있습니다)"}
 
@@ -55,7 +55,7 @@ class Method22(LearningMethod):
         # 현재는 텍스트 exact match. 추후 필기 인식 결과와 비교하도록 확장
         correct = (submitted.strip() == hanja.strip())
 
-        srs_manager.update_weight(user_id, grade, hanja, correct)
+        srs_manager.update_weight(user_id, grade, hanja, correct, method=self.method_id)
 
         return {
             "status": "success",
