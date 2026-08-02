@@ -37,6 +37,64 @@ export interface StudyListResponse {
   error?: string;
 }
 
+// ========== 기출문제 (4-1 / 4-2) ==========
+
+/** 기출 1문항 */
+export interface ExamQuestion {
+  level: string;
+  session: number;
+  exam_date: string;
+  question_no: number;
+  question_type: string;
+  instruction: string;
+  question_text: string;
+  target: string;
+  options: string[] | null;
+  answer: string;
+  answer_display: string;
+}
+
+export interface ExamSessionInfo {
+  level: string;
+  session: number;
+  exam_date: string;
+  total: number;
+}
+
+export interface ExamTypeInfo {
+  code: string;
+  label: string;
+}
+
+export interface ExamMetaResponse {
+  levels: string[];
+  sessions: Record<string, ExamSessionInfo[]>;
+  types: ExamTypeInfo[];
+  total_questions: number;
+  error?: string;
+}
+
+export interface ExamSessionsResponse {
+  level: string | null;
+  sessions: ExamSessionInfo[];
+  total: number;
+  error?: string;
+}
+
+export interface ExamQuestionsResponse {
+  level: string;
+  session?: number;
+  exam_date?: string;
+  total: number;
+  questions: ExamQuestion[];
+  count_requested?: number;
+  filters?: {
+    types: string[];
+    sessions: number[];
+  };
+  error?: string;
+}
+
 export const apiClient = {
   getNextQuestion: async (
     userId: string = 'default',
@@ -92,6 +150,71 @@ export const apiClient = {
       selected_grade: selectedGrade,
     });
     const res = await fetch(`${API_BASE_URL}/api/study-list?${params}`);
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`서버 응답 오류 (${res.status}): ${text || res.statusText}`);
+    }
+    return res.json();
+  },
+
+  // ---------- 기출문제 API ----------
+
+  /** 급수·회차·유형 메타 한 번에 */
+  getExamMeta: async (): Promise<ExamMetaResponse> => {
+    const res = await fetch(`${API_BASE_URL}/api/exam/meta`);
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`서버 응답 오류 (${res.status}): ${text || res.statusText}`);
+    }
+    return res.json();
+  },
+
+  /** 회차 목록 */
+  getExamSessions: async (level?: string): Promise<ExamSessionsResponse> => {
+    const params = new URLSearchParams();
+    if (level) params.set('level', level);
+    const qs = params.toString();
+    const res = await fetch(`${API_BASE_URL}/api/exam/sessions${qs ? `?${qs}` : ''}`);
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`서버 응답 오류 (${res.status}): ${text || res.statusText}`);
+    }
+    return res.json();
+  },
+
+  /** 4-1: 특정 회차 전체 (번호순) */
+  getExamQuestions: async (
+    level: string,
+    session: number
+  ): Promise<ExamQuestionsResponse> => {
+    const params = new URLSearchParams({
+      level,
+      session: String(session),
+    });
+    const res = await fetch(`${API_BASE_URL}/api/exam/questions?${params}`);
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`서버 응답 오류 (${res.status}): ${text || res.statusText}`);
+    }
+    return res.json();
+  },
+
+  /** 4-2: 필터 후 랜덤 샘플 */
+  getExamQuestionsRandom: async (opts: {
+    level: string;
+    count?: number;
+    types?: string[];
+    sessions?: number[];
+  }): Promise<ExamQuestionsResponse> => {
+    const params = new URLSearchParams({ level: opts.level });
+    if (opts.count != null) params.set('count', String(opts.count));
+    if (opts.types && opts.types.length > 0) {
+      params.set('types', opts.types.join(','));
+    }
+    if (opts.sessions && opts.sessions.length > 0) {
+      params.set('sessions', opts.sessions.join(','));
+    }
+    const res = await fetch(`${API_BASE_URL}/api/exam/questions/random?${params}`);
     if (!res.ok) {
       const text = await res.text();
       throw new Error(`서버 응답 오류 (${res.status}): ${text || res.statusText}`);
