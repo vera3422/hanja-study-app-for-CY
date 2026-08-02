@@ -3,6 +3,9 @@ from pydantic import BaseModel
 
 from app.services.learning.factory import get_learning_method
 from app.services.srs import srs_manager
+from app.services.data_loader import df
+from app.services.grade_range import get_exact_grade
+from app.services.checker import _get_joined_option
 
 router = APIRouter(prefix="/api", tags=["questions"])
 
@@ -47,6 +50,45 @@ def submit_answer(request: SubmitAnswerRequest):
         return {"error": str(e)}
     except Exception as e:
         return {"error": f"답안 처리 중 오류: {str(e)}"}
+
+
+@router.get("/study-list")
+def get_study_list(
+    selected_grade: str = Query(..., description="학습할 급수 (예: 4급). 해당 급수만 정확히 반환"),
+):
+    """
+    학습 방법 3-1 / 3-2용: 선택한 급수의 한자 전체 리스트 반환.
+    Frontend에서 셔플 후 1회씩 순차 학습하는 용도.
+    SRS 미적용.
+    """
+    if df is None:
+        return {"error": "한자 데이터가 로드되지 않았습니다."}
+
+    exact = get_exact_grade(selected_grade)
+    grade = exact[0]
+
+    rows = df[df["급수"] == grade].to_dict("records")
+    if not rows:
+        return {
+            "error": f"'{grade}'에 해당하는 한자가 없습니다.",
+            "grade": grade,
+            "total": 0,
+            "items": [],
+        }
+
+    items = []
+    for row in rows:
+        items.append({
+            "hanja": row["한자"],
+            "correct_hun_eum": _get_joined_option(row),
+            "grade": grade,
+        })
+
+    return {
+        "grade": grade,
+        "total": len(items),
+        "items": items,
+    }
 
 
 @router.get("/srs-weights")

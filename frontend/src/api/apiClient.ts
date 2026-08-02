@@ -22,6 +22,21 @@ export interface SubmitResult {
   error?: string;
 }
 
+/** 학습 방법 3-1 / 3-2 용 한자 1개 항목 */
+export interface StudyItem {
+  hanja: string;
+  correct_hun_eum: string;
+  grade: string;
+}
+
+/** GET /api/study-list 응답 */
+export interface StudyListResponse {
+  grade: string;
+  total: number;
+  items: StudyItem[];
+  error?: string;
+}
+
 export const apiClient = {
   getNextQuestion: async (
     userId: string = 'default',
@@ -64,5 +79,23 @@ export const apiClient = {
       throw new Error('제출 실패');
     }
     return response.json();
+  },
+
+  /**
+   * 학습 방법 3-1 / 3-2용: 선택한 급수의 한자 전체 리스트 조회
+   * Frontend에서 셔플 후 1회씩 순차 학습하는 용도 (SRS 미적용)
+   */
+  getStudyList: async (
+    selectedGrade: string
+  ): Promise<StudyListResponse> => {
+    const params = new URLSearchParams({
+      selected_grade: selectedGrade,
+    });
+    const res = await fetch(`${API_BASE_URL}/api/study-list?${params}`);
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`서버 응답 오류 (${res.status}): ${text || res.statusText}`);
+    }
+    return res.json();
   },
 };
