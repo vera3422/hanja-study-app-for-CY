@@ -174,7 +174,7 @@ export default function Method32({ selectedLevel, onBackToMenu }: MethodProps) {
               ) : (
                 <span className="w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0 invisible" aria-hidden />
               )}
-              <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-indigo-700 leading-relaxed">
+              <p className="text-xl sm:text-2xl md:text-3xl font-bold text-indigo-700 leading-relaxed">
                 {current.correct_hun_eum || '(훈/음 없음)'}
               </p>
               <span className="w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0 invisible" aria-hidden />
@@ -187,7 +187,7 @@ export default function Method32({ selectedLevel, onBackToMenu }: MethodProps) {
             <HandwritingPad
               ref={padRef}
               disabled={revealed}
-              className="mb-3 sm:mb-4 max-w-xs sm:max-w-sm mx-auto"
+              className="mb-3 sm:mb-4 max-w-[240px] sm:max-w-xs mx-auto"
             />
 
             {!revealed && (
