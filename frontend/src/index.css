@@ -19,7 +19,9 @@
 
   font: 18px/145% var(--sans);
   letter-spacing: 0.18px;
-  color-scheme: light dark;
+  /* 앱 UI는 라이트 배경 고정 — 시스템 다크모드에서 h1/h2가 밝은 글씨로
+     바뀌며 흰 배경에 안 보이는 문제 방지 (갤럭시 크롬 등) */
+  color-scheme: light only;
   color: var(--text);
   background: var(--bg);
   font-synthesis: none;
@@ -32,25 +34,7 @@
   }
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
-
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
-}
+/* 시스템 다크모드여도 CSS 변수는 라이트 유지 (Tailwind bg-white/gray-50과 일치) */
 
 #root {
   width: 1126px;
@@ -72,7 +56,8 @@ h1,
 h2 {
   font-family: var(--heading);
   font-weight: 500;
-  color: var(--text-h);
+  /* 명시적 어두운 색 — 다크모드/자동 반전 환경에서도 가독성 유지 */
+  color: #111827; /* gray-900 */
 }
 
 h1 {

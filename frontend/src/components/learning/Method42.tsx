@@ -26,7 +26,9 @@ export default function Method42({ onBackToMenu }: MethodProps) {
   const [selectedLevel, setSelectedLevel] = useState('4급');
   const [sessions, setSessions] = useState<ExamSessionInfo[]>([]);
   const [types, setTypes] = useState<ExamTypeInfo[]>([]);
-  const [selectedSessions, setSelectedSessions] = useState<number[]>([]); // 빈 배열 = 전체
+  // 회차 범위: null = 전체 (시작·종료 모두 null일 때)
+  const [sessionFrom, setSessionFrom] = useState<number | null>(null);
+  const [sessionTo, setSessionTo] = useState<number | null>(null);
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]); // 빈 배열 = 전체
   const [count, setCount] = useState(20);
   const [questions, setQuestions] = useState<ExamQuestion[]>([]);
@@ -52,9 +54,10 @@ export default function Method42({ onBackToMenu }: MethodProps) {
         setSelectedLevel(initial);
         setSessions(meta.sessions?.[initial] ?? []);
         setTypes(meta.types ?? []);
-        // 기본: 전체 유형·회차 (선택 없음 = 전체)
+        // 기본: 전체 유형·회차
         setSelectedTypes([]);
-        setSelectedSessions([]);
+        setSessionFrom(null);
+        setSessionTo(null);
       } catch (err) {
         if (cancelled) return;
         const message = err instanceof Error ? err.message : String(err);
@@ -76,7 +79,9 @@ export default function Method42({ onBackToMenu }: MethodProps) {
         const data = await apiClient.getExamSessions(selectedLevel);
         if (cancelled) return;
         setSessions(data.sessions ?? []);
-        setSelectedSessions([]); // 급수 바꾸면 회차 필터 초기화
+        // 급수 바꾸면 회차 범위 초기화 (전체)
+        setSessionFrom(null);
+        setSessionTo(null);
       } catch {
         /* ignore */
       }
@@ -92,24 +97,43 @@ export default function Method42({ onBackToMenu }: MethodProps) {
     );
   };
 
-  const toggleSession = (session: number) => {
-    setSelectedSessions((prev) =>
-      prev.includes(session) ? prev.filter((s) => s !== session) : [...prev, session]
-    );
+  const selectAllTypes = () => setSelectedTypes([]);
+  const selectAllSessions = () => {
+    setSessionFrom(null);
+    setSessionTo(null);
   };
 
-  const selectAllTypes = () => setSelectedTypes([]);
-  const selectAllSessions = () => setSelectedSessions([]);
+  /** 시작·종료 회차로 실제 존재하는 회차 번호 배열 생성 (전체면 undefined) */
+  const buildSessionFilter = useCallback((): number[] | undefined => {
+    if (sessionFrom == null && sessionTo == null) return undefined;
+    if (sessions.length === 0) return undefined;
+    const nums = sessions.map((s) => s.session);
+    const lo =
+      sessionFrom != null
+        ? sessionTo != null
+          ? Math.min(sessionFrom, sessionTo)
+          : sessionFrom
+        : Math.min(...nums);
+    const hi =
+      sessionTo != null
+        ? sessionFrom != null
+          ? Math.max(sessionFrom, sessionTo)
+          : sessionTo
+        : Math.max(...nums);
+    const filtered = nums.filter((n) => n >= lo && n <= hi);
+    return filtered.length > 0 ? filtered : undefined;
+  }, [sessionFrom, sessionTo, sessions]);
 
   const startRandom = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
+      const sessionsFilter = buildSessionFilter();
       const data = await apiClient.getExamQuestionsRandom({
         level: selectedLevel,
         count,
         types: selectedTypes.length > 0 ? selectedTypes : undefined,
-        sessions: selectedSessions.length > 0 ? selectedSessions : undefined,
+        sessions: sessionsFilter,
       });
       if (data.error) {
         setError(data.error);
@@ -128,7 +152,7 @@ export default function Method42({ onBackToMenu }: MethodProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedLevel, count, selectedTypes, selectedSessions]);
+  }, [selectedLevel, count, selectedTypes, buildSessionFilter]);
 
   const handleRestart = () => {
     // 같은 필터로 다시 랜덤 샘플
@@ -141,18 +165,24 @@ export default function Method42({ onBackToMenu }: MethodProps) {
   };
 
   if (phase === 'playing' && questions.length > 0) {
+    const typeDisplay = (code: string) =>
+      code === 'mean' ? '단어 뜻' : code;
     const typeLabel =
       selectedTypes.length === 0
         ? '전체 유형'
         : selectedTypes.length <= 2
-          ? selectedTypes.join(', ')
+          ? selectedTypes.map(typeDisplay).join(', ')
           : `${selectedTypes.length}개 유형`;
-    const sessLabel =
-      selectedSessions.length === 0
-        ? '전체 회차'
-        : selectedSessions.length <= 3
-          ? selectedSessions.map((s) => `${s}회`).join(', ')
-          : `${selectedSessions.length}개 회차`;
+    const sessLabel = (() => {
+      if (sessionFrom == null && sessionTo == null) return '전체 회차';
+      if (sessionFrom != null && sessionTo != null) {
+        const lo = Math.min(sessionFrom, sessionTo);
+        const hi = Math.max(sessionFrom, sessionTo);
+        return lo === hi ? `${lo}회` : `${lo}~${hi}회`;
+      }
+      if (sessionFrom != null) return `${sessionFrom}회~`;
+      return `~${sessionTo}회`;
+    })();
     return (
       <ExamPlayer
         key={playKey}
@@ -242,6 +272,9 @@ export default function Method42({ onBackToMenu }: MethodProps) {
             <div className="flex flex-wrap gap-2">
               {types.map((t) => {
                 const on = selectedTypes.includes(t.code);
+                // 화면 표시명만 한글화 (내부 코드 mean 등은 유지)
+                const displayLabel =
+                  t.code === 'mean' ? '단어 뜻' : t.label;
                 return (
                   <button
                     key={t.code}
@@ -253,17 +286,17 @@ export default function Method42({ onBackToMenu }: MethodProps) {
                         : 'border-gray-200 text-gray-600 hover:border-indigo-300'
                     }`}
                   >
-                    {t.label}
+                    {displayLabel}
                   </button>
                 );
               })}
             </div>
           </div>
 
-          {/* 회차 필터 */}
+          {/* 회차 범위 필터 (시작 ~ 종료) */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="text-sm font-medium text-gray-700">회차</label>
+              <label className="text-sm font-medium text-gray-700">회차 범위</label>
               <button
                 type="button"
                 onClick={selectAllSessions}
@@ -273,31 +306,57 @@ export default function Method42({ onBackToMenu }: MethodProps) {
               </button>
             </div>
             <p className="text-xs text-gray-400 mb-2">
-              {selectedSessions.length === 0
-                ? '전체 회차 (선택 없음 = 전체)'
-                : `${selectedSessions.length}개 선택`}
+              {sessionFrom == null && sessionTo == null
+                ? '전체 회차 (시작·종료 미선택 = 전체)'
+                : sessionFrom != null && sessionTo != null
+                  ? `${Math.min(sessionFrom, sessionTo)}회 ~ ${Math.max(sessionFrom, sessionTo)}회`
+                  : sessionFrom != null
+                    ? `${sessionFrom}회부터`
+                    : `${sessionTo}회까지`}
             </p>
             {sessions.length === 0 ? (
               <p className="text-gray-400 text-sm">회차 없음</p>
             ) : (
-              <div className="flex flex-wrap gap-2 max-h-36 overflow-y-auto">
-                {sessions.map((s) => {
-                  const on = selectedSessions.includes(s.session);
-                  return (
-                    <button
-                      key={s.session}
-                      type="button"
-                      onClick={() => toggleSession(s.session)}
-                      className={`px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium border transition-colors ${
-                        on
-                          ? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-                          : 'border-gray-200 text-gray-600 hover:border-indigo-300'
-                      }`}
-                    >
-                      {s.session}회
-                    </button>
-                  );
-                })}
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="flex-1">
+                  <label className="block text-xs text-gray-500 mb-1">시작 회차</label>
+                  <select
+                    value={sessionFrom ?? ''}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setSessionFrom(v === '' ? null : Number(v));
+                    }}
+                    disabled={isLoading}
+                    className="w-full text-sm sm:text-base font-medium text-center py-2.5 border-2 border-gray-200 focus:border-indigo-500 rounded-xl outline-none bg-white"
+                  >
+                    <option value="">전체</option>
+                    {sessions.map((s) => (
+                      <option key={s.session} value={s.session}>
+                        {s.session}회
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <span className="pt-5 text-gray-400 font-medium">~</span>
+                <div className="flex-1">
+                  <label className="block text-xs text-gray-500 mb-1">종료 회차</label>
+                  <select
+                    value={sessionTo ?? ''}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setSessionTo(v === '' ? null : Number(v));
+                    }}
+                    disabled={isLoading}
+                    className="w-full text-sm sm:text-base font-medium text-center py-2.5 border-2 border-gray-200 focus:border-indigo-500 rounded-xl outline-none bg-white"
+                  >
+                    <option value="">전체</option>
+                    {sessions.map((s) => (
+                      <option key={s.session} value={s.session}>
+                        {s.session}회
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
             )}
           </div>

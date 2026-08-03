@@ -30,6 +30,7 @@ TYPE_LABELS: Dict[str, str] = {
     "uut_select": "뜻 고르기",
     "seong-eo": "성어",
     "hanjaeo_write": "한자어 쓰기",
+    "mean": "단어 뜻",  # 표시용 라벨만 변경 (코드 mean 유지)
 }
 
 

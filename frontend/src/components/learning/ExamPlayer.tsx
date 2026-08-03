@@ -261,7 +261,9 @@ export default function ExamPlayer({
           {/* 유형 뱃지 + 회차·번호 */}
           <div className="flex flex-wrap items-center gap-2 mb-4 text-xs sm:text-sm text-gray-400">
             <span className="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 font-medium">
-              {current.question_type}
+              {current.question_type === 'mean'
+                ? '단어 뜻'
+                : current.question_type}
             </span>
             <span>
               {current.level} · {current.session}회 · {current.question_no}번
