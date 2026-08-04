@@ -153,6 +153,8 @@ const HandwritingPad = forwardRef<HandwritingPadHandle, HandwritingPadProps>(
     };
 
     // --- Pointer Events (터치 + 마우스 통합) ---
+    // 모바일에서 캔버스 위 드래그가 페이지 스크롤로 해석되지 않도록
+    // { passive: false }로 preventDefault를 허용하고, Touch 경로도 함께 차단한다.
     useEffect(() => {
       const canvas = canvasRef.current;
       if (!canvas) return;
@@ -177,18 +179,32 @@ const HandwritingPad = forwardRef<HandwritingPadHandle, HandwritingPadProps>(
         endStroke();
       };
 
-      canvas.addEventListener('pointerdown', onPointerDown);
-      canvas.addEventListener('pointermove', onPointerMove);
-      canvas.addEventListener('pointerup', onPointerUp);
-      canvas.addEventListener('pointercancel', onPointerCancel);
-      // 터치 스크롤 방지
+      // Touch 전용 경로 스크롤 차단 (그리기는 Pointer가 담당)
+      const onTouchStart = (e: TouchEvent) => {
+        e.preventDefault();
+      };
+      const onTouchMove = (e: TouchEvent) => {
+        e.preventDefault();
+      };
+
+      const opts: AddEventListenerOptions = { passive: false };
+
+      canvas.addEventListener('pointerdown', onPointerDown, opts);
+      canvas.addEventListener('pointermove', onPointerMove, opts);
+      canvas.addEventListener('pointerup', onPointerUp, opts);
+      canvas.addEventListener('pointercancel', onPointerCancel, opts);
+      canvas.addEventListener('touchstart', onTouchStart, opts);
+      canvas.addEventListener('touchmove', onTouchMove, opts);
+      // CSS 레벨 터치 제스처 차단 (스크롤·줌 등)
       canvas.style.touchAction = 'none';
 
       return () => {
-        canvas.removeEventListener('pointerdown', onPointerDown);
-        canvas.removeEventListener('pointermove', onPointerMove);
-        canvas.removeEventListener('pointerup', onPointerUp);
-        canvas.removeEventListener('pointercancel', onPointerCancel);
+        canvas.removeEventListener('pointerdown', onPointerDown, opts);
+        canvas.removeEventListener('pointermove', onPointerMove, opts);
+        canvas.removeEventListener('pointerup', onPointerUp, opts);
+        canvas.removeEventListener('pointercancel', onPointerCancel, opts);
+        canvas.removeEventListener('touchstart', onTouchStart, opts);
+        canvas.removeEventListener('touchmove', onTouchMove, opts);
       };
     }, [disabled]);
 
@@ -237,7 +253,7 @@ const HandwritingPad = forwardRef<HandwritingPadHandle, HandwritingPadProps>(
       <canvas
         ref={canvasRef}
         className={`
-          w-full aspect-square max-w-xs sm:max-w-sm mx-auto
+          w-full aspect-square mx-auto
           bg-white rounded-2xl border-2 border-gray-200
           shadow-inner touch-none
           ${disabled ? 'opacity-70 cursor-not-allowed' : 'cursor-crosshair'}
