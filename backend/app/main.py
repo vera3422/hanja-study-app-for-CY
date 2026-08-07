@@ -6,6 +6,7 @@ from app.services.exam_loader import load_exam_data
 from app.services.grade_range import get_grade_range
 from app.routers.questions import router as questions_router
 from app.routers.exam import router as exam_router
+from app.routers.handwriting import router as handwriting_router
 
 app = FastAPI(title="한자능력검정 학습 앱")
 
@@ -21,6 +22,7 @@ app.add_middleware(
 # 라우터 등록
 app.include_router(questions_router)
 app.include_router(exam_router)
+app.include_router(handwriting_router)
 
 # 데이터 로드 (한자 사전 + 기출)
 df, grades = load_hanja_data()

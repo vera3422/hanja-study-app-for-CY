@@ -42,6 +42,8 @@ interface HandwritingPadProps {
   strokeColor?: string;
   /** 선 두께 */
   strokeWidth?: number;
+  /** 필기 정렬 보조용 격자 (십자 + 사분) */
+  showGrid?: boolean;
 }
 
 const HandwritingPad = forwardRef<HandwritingPadHandle, HandwritingPadProps>(
@@ -51,6 +53,7 @@ const HandwritingPad = forwardRef<HandwritingPadHandle, HandwritingPadProps>(
       className = '',
       strokeColor = '#1e1b4b', // indigo-950 계열
       strokeWidth = 4,
+      showGrid = false,
     },
     ref
   ) {
@@ -93,6 +96,29 @@ const HandwritingPad = forwardRef<HandwritingPadHandle, HandwritingPadProps>(
       const rect = canvas.getBoundingClientRect();
       ctx.clearRect(0, 0, rect.width, rect.height);
 
+      // 격자 가이드 (획보다 아래 레이어)
+      if (showGrid) {
+        const w = rect.width;
+        const h = rect.height;
+        ctx.save();
+        ctx.strokeStyle = '#e5e7eb'; // gray-200
+        ctx.lineWidth = 1;
+        // 사분 격자
+        ctx.beginPath();
+        ctx.moveTo(w / 2, 0);
+        ctx.lineTo(w / 2, h);
+        ctx.moveTo(0, h / 2);
+        ctx.lineTo(w, h / 2);
+        ctx.stroke();
+        // 외곽에서 약간 안쪽 가이드 박스
+        const pad = Math.min(w, h) * 0.08;
+        ctx.strokeStyle = '#f3f4f6'; // gray-100
+        ctx.setLineDash([4, 4]);
+        ctx.strokeRect(pad, pad, w - pad * 2, h - pad * 2);
+        ctx.setLineDash([]);
+        ctx.restore();
+      }
+
       ctx.lineCap = 'round';
       ctx.lineJoin = 'round';
       ctx.strokeStyle = strokeColor;
@@ -107,7 +133,7 @@ const HandwritingPad = forwardRef<HandwritingPadHandle, HandwritingPadProps>(
         }
         ctx.stroke();
       }
-    }, [strokeColor, strokeWidth]);
+    }, [strokeColor, strokeWidth, showGrid]);
 
     // 좌표 변환 (캔버스 기준)
     const getPoint = (clientX: number, clientY: number): StrokePoint => {
@@ -222,6 +248,11 @@ const HandwritingPad = forwardRef<HandwritingPadHandle, HandwritingPadProps>(
         currentStrokeRef.current = [];
       }
     }, [disabled]);
+
+    // 격자 표시 여부 변경 시 다시 그림
+    useEffect(() => {
+      redrawAll();
+    }, [showGrid, redrawAll]);
 
     // ref API 노출
     useImperativeHandle(

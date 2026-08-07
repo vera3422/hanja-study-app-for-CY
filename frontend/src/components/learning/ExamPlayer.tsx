@@ -6,8 +6,21 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import type { ExamQuestion } from '../../api/apiClient';
 import HandwritingPad, { type HandwritingPadHandle } from './HandwritingPad';
-import { recognizeHanja } from '../../lib/hanjaRecognizer';
+import { recognizeCharsByEngine } from '../../lib/recognizeEngines';
 import HanjaDictLink from './HanjaDictLink';
+
+/** Google writing_guide용 캔버스 CSS 크기 */
+function getPadSize(): { width: number; height: number } {
+  const el = document.querySelector('canvas[aria-label="한자 필기 영역"]') as HTMLCanvasElement | null;
+  if (el) {
+    const r = el.getBoundingClientRect();
+    return {
+      width: Math.max(Math.round(r.width), 50),
+      height: Math.max(Math.round(r.height), 50),
+    };
+  }
+  return { width: 280, height: 280 };
+}
 
 /** 텍스트 입력 유형 */
 const TEXT_TYPES = new Set(['dokum', 'hunum']);
@@ -170,7 +183,8 @@ export default function ExamPlayer({
     }
     setIsRecognizing(true);
     try {
-      const list = await recognizeHanja(strokes);
+      // hybrid: Google 주력 + 실패 시 로컬(hanzilookup-js) fallback
+      const list = await recognizeCharsByEngine('hybrid', strokes, getPadSize());
       if (list.length === 0) {
         alert('인식된 후보가 없습니다. 다시 써 주세요.');
         return;

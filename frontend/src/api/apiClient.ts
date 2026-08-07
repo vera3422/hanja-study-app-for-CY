@@ -221,4 +221,48 @@ export const apiClient = {
     }
     return res.json();
   },
+
+  // ---------- 필기 인식 (Google 프록시) ----------
+
+  /**
+   * Backend → Google Input Tools Handwriting
+   * strokes: HandwritingPad getStrokes() 결과 ({x,y}[][])
+   * width/height: 캔버스 CSS 크기 (writing_guide용)
+   */
+  recognizeHandwriting: async (opts: {
+    strokes: { x: number; y: number }[][];
+    width: number;
+    height: number;
+    language?: string;
+    max_results?: number;
+  }): Promise<{
+    candidates: string[];
+    source: string;
+    language?: string;
+    error?: string | null;
+  }> => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 10000);
+    try {
+      const res = await fetch(`${API_BASE_URL}/api/recognize-handwriting`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          strokes: opts.strokes,
+          width: opts.width,
+          height: opts.height,
+          language: opts.language ?? 'zh_TW',
+          max_results: opts.max_results ?? 8,
+        }),
+        signal: controller.signal,
+      });
+      if (!res.ok) {
+        const text = await res.text();
+        throw new Error(`서버 응답 오류 (${res.status}): ${text || res.statusText}`);
+      }
+      return res.json();
+    } finally {
+      clearTimeout(timer);
+    }
+  },
 };

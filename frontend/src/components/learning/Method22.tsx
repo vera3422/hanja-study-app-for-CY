@@ -1,8 +1,21 @@
 import { useState, useRef, useEffect } from 'react';
 import { apiClient, type QuestionResponse } from '../../api/apiClient';
 import HandwritingPad, { type HandwritingPadHandle } from './HandwritingPad';
-import { recognizeHanja } from '../../lib/hanjaRecognizer';
+import { recognizeCharsByEngine } from '../../lib/recognizeEngines';
 import HanjaDictLink from './HanjaDictLink';
+
+/** Google writing_guide용 캔버스 CSS 크기 */
+function getPadSize(): { width: number; height: number } {
+  const el = document.querySelector('canvas[aria-label="한자 필기 영역"]') as HTMLCanvasElement | null;
+  if (el) {
+    const r = el.getBoundingClientRect();
+    return {
+      width: Math.max(Math.round(r.width), 50),
+      height: Math.max(Math.round(r.height), 50),
+    };
+  }
+  return { width: 280, height: 280 };
+}
 
 interface MethodProps {
   selectedLevel: string;
@@ -120,7 +133,8 @@ export default function Method22({ selectedLevel, onBackToMenu }: MethodProps) {
 
     setIsSubmitting(true);
     try {
-      const list = await recognizeHanja(strokes);
+      // hybrid: Google 주력 + 실패 시 로컬(hanzilookup-js) fallback
+      const list = await recognizeCharsByEngine('hybrid', strokes, getPadSize());
       const answerHanja = currentQuestion.hanja;
 
       // ----- 모드별 처리 -----
@@ -216,7 +230,7 @@ export default function Method22({ selectedLevel, onBackToMenu }: MethodProps) {
 
       <div className="text-center max-w-md w-full">
         <div className="text-4xl sm:text-5xl md:text-6xl mb-4 sm:mb-6">🖋️</div>
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-3 sm:mb-4">
           {selectedLevel} 학습 (2-2 훈/음 → 한자 쓰기)
         </h2>
 
@@ -243,7 +257,7 @@ export default function Method22({ selectedLevel, onBackToMenu }: MethodProps) {
             <HandwritingPad
               ref={padRef}
               disabled={!!feedback || isSubmitting || !!candidates}
-              className="mb-3 sm:mb-4"
+              className="mb-3 sm:mb-4 max-w-xs sm:max-w-sm"
             />
 
             {/* 지우기 / 실행취소 — 제출·후보 선택 전에는 사용 가능 */}

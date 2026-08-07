@@ -7,12 +7,14 @@ import Method31 from './components/learning/Method31';
 import Method32 from './components/learning/Method32';
 import Method41 from './components/learning/Method41';
 import Method42 from './components/learning/Method42';
+import HandwritingTestPage from './components/dev/HandwritingTestPage'; //필기 인식 test 관련
 
 type AppMode =
   | 'home'
   | 'study-menu'
   | 'quiz-menu'
   | 'exam-menu'
+  | 'handwriting-test'  //필기 인식 test 관련
   | '1-1' | '1-2' | '2-1' | '2-2'
   | '3-1' | '3-2'
   | '4-1' | '4-2';
@@ -44,6 +46,10 @@ function App() {
   if (mode === '3-2') return <Method32 selectedLevel={studyLevel} onBackToMenu={handleBackToStudyMenu} />;
   if (mode === '4-1') return <Method41 onBackToMenu={handleBackToExamMenu} />;
   if (mode === '4-2') return <Method42 onBackToMenu={handleBackToExamMenu} />;
+  // 실험용 필기 인식 테스트 (제거 시 이 분기 + import + 홈 버튼만 삭제)
+  if (mode === 'handwriting-test') {
+    return <HandwritingTestPage onBack={() => setMode('home')} />;
+  }
 
   // ---------- 공통 헤더 ----------
   const Header = () => (
@@ -72,7 +78,7 @@ function App() {
               <div className="flex items-start gap-4 sm:gap-6 md:gap-8">
                 <div className="text-4xl sm:text-5xl md:text-7xl flex-shrink-0">📖</div>
                 <div className="text-left">
-                  <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold mb-1 sm:mb-2 md:mb-3">
+                  <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-900 mb-1 sm:mb-2 md:mb-3">
                     학습 하기
                   </h3>
                   <p className="text-sm sm:text-base md:text-xl text-gray-600">
@@ -90,7 +96,7 @@ function App() {
               <div className="flex items-start gap-4 sm:gap-6 md:gap-8">
                 <div className="text-4xl sm:text-5xl md:text-7xl flex-shrink-0">✏️</div>
                 <div className="text-left">
-                  <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold mb-1 sm:mb-2 md:mb-3">
+                  <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-900 mb-1 sm:mb-2 md:mb-3">
                     한자 or 훈/음 맞추기
                   </h3>
                   <p className="text-sm sm:text-base md:text-xl text-gray-600">
@@ -108,7 +114,7 @@ function App() {
               <div className="flex items-start gap-4 sm:gap-6 md:gap-8">
                 <div className="text-4xl sm:text-5xl md:text-7xl flex-shrink-0">📜</div>
                 <div className="text-left">
-                  <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold mb-1 sm:mb-2 md:mb-3">
+                  <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-900 mb-1 sm:mb-2 md:mb-3">
                     기출문제 풀이
                   </h3>
                   <p className="text-sm sm:text-base md:text-xl text-gray-600">
@@ -117,6 +123,25 @@ function App() {
                 </div>
               </div>
             </button>
+
+            {/* 실험: 필기 인식 엔진 비교 (나중에 제거 가능) */}
+            <button
+              onClick={() => setMode('handwriting-test')}
+              className="w-full p-4 sm:p-5 bg-gray-100 rounded-2xl border border-dashed border-gray-300
+                hover:border-gray-400 hover:bg-gray-50 transition-all text-left"
+            >
+              <div className="flex items-center gap-3 sm:gap-4">
+                <div className="text-2xl sm:text-3xl flex-shrink-0">🧪</div>
+                <div>
+                  <h3 className="text-base sm:text-lg font-medium text-gray-700">
+                    필기 인식 테스트 (실험)
+                  </h3>
+                  <p className="text-xs sm:text-sm text-gray-500">
+                    로컬 / Google / 하이브리드 인식 비교 · 실사용과 분리
+                  </p>
+                </div>
+              </div>
+            </button>  {/*필기 인식 test 관련 여기까지*/}
           </div>
         </main>
       </div>
@@ -130,7 +155,7 @@ function App() {
         <Header />
         <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-16">
           <div className="max-w-md mx-auto text-center mb-10 sm:mb-16">
-            <h2 className="text-2xl sm:text-3xl font-semibold mb-4 sm:mb-6">급수 선택</h2>
+            <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-4 sm:mb-6">급수 선택</h2>
             <div className="bg-white p-5 sm:p-8 rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100">
               <label className="block text-base sm:text-lg font-medium text-gray-700 mb-3 sm:mb-4">
                 학습할 급수
@@ -159,7 +184,7 @@ function App() {
               <div className="flex items-start gap-4 sm:gap-6 md:gap-8">
                 <div className="text-4xl sm:text-5xl md:text-7xl flex-shrink-0">🈶</div>
                 <div className="text-left">
-                  <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold mb-1 sm:mb-2 md:mb-3">
+                  <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-900 mb-1 sm:mb-2 md:mb-3">
                     한자 → 훈/음 보기
                   </h3>
                   <p className="text-sm sm:text-base md:text-xl text-gray-600">
@@ -177,7 +202,7 @@ function App() {
               <div className="flex items-start gap-4 sm:gap-6 md:gap-8">
                 <div className="text-4xl sm:text-5xl md:text-7xl flex-shrink-0">✍️</div>
                 <div className="text-left">
-                  <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold mb-1 sm:mb-2 md:mb-3">
+                  <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-900 mb-1 sm:mb-2 md:mb-3">
                     훈/음 → 한자 쓰기
                   </h3>
                   <p className="text-sm sm:text-base md:text-xl text-gray-600">
@@ -208,7 +233,7 @@ function App() {
         <Header />
         <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-16">
           <div className="max-w-md mx-auto text-center mb-10 sm:mb-12">
-            <h2 className="text-2xl sm:text-3xl font-semibold mb-2">기출문제 풀이</h2>
+            <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-2">기출문제 풀이</h2>
             <p className="text-sm sm:text-base text-gray-500">
               실제 시험 문항으로 연습합니다 (SRS 미적용)
             </p>
@@ -223,7 +248,7 @@ function App() {
               <div className="flex items-start gap-4 sm:gap-6 md:gap-8">
                 <div className="text-4xl sm:text-5xl md:text-7xl flex-shrink-0">📜</div>
                 <div className="text-left">
-                  <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold mb-1 sm:mb-2 md:mb-3">
+                  <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-900 mb-1 sm:mb-2 md:mb-3">
                     회차별 기출 풀이
                   </h3>
                   <p className="text-sm sm:text-base md:text-xl text-gray-600">
@@ -241,7 +266,7 @@ function App() {
               <div className="flex items-start gap-4 sm:gap-6 md:gap-8">
                 <div className="text-4xl sm:text-5xl md:text-7xl flex-shrink-0">🎲</div>
                 <div className="text-left">
-                  <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold mb-1 sm:mb-2 md:mb-3">
+                  <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-900 mb-1 sm:mb-2 md:mb-3">
                     랜덤 기출 풀이
                   </h3>
                   <p className="text-sm sm:text-base md:text-xl text-gray-600">
@@ -271,7 +296,7 @@ function App() {
       <Header />
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-16">
         <div className="max-w-md mx-auto text-center mb-10 sm:mb-16">
-          <h2 className="text-2xl sm:text-3xl font-semibold mb-4 sm:mb-6">급수 선택</h2>
+          <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-4 sm:mb-6">급수 선택</h2>
           <div className="bg-white p-5 sm:p-8 rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100">
             <label className="block text-base sm:text-lg font-medium text-gray-700 mb-3 sm:mb-4">
               학습할 급수
@@ -297,7 +322,7 @@ function App() {
             <div className="flex items-start gap-4 sm:gap-6 md:gap-8">
               <div className="text-4xl sm:text-5xl md:text-7xl flex-shrink-0">📝</div>
               <div className="text-left">
-                <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold mb-1 sm:mb-2 md:mb-3">
+                <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-900 mb-1 sm:mb-2 md:mb-3">
                   한자 → 훈/음
                 </h3>
                 <p className="text-sm sm:text-base md:text-xl text-gray-600">
@@ -315,7 +340,7 @@ function App() {
             <div className="flex items-start gap-4 sm:gap-6 md:gap-8">
               <div className="text-4xl sm:text-5xl md:text-7xl flex-shrink-0">⌨️</div>
               <div className="text-left">
-                <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold mb-1 sm:mb-2 md:mb-3">
+                <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-900 mb-1 sm:mb-2 md:mb-3">
                   한자 → 훈/음 타이핑
                 </h3>
                 <p className="text-sm sm:text-base md:text-xl text-gray-600">
@@ -333,7 +358,7 @@ function App() {
             <div className="flex items-start gap-4 sm:gap-6 md:gap-8">
               <div className="text-4xl sm:text-5xl md:text-7xl flex-shrink-0">🔍</div>
               <div className="text-left">
-                <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold mb-1 sm:mb-2 md:mb-3">
+                <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-900 mb-1 sm:mb-2 md:mb-3">
                   훈/음 → 한자 (객관식)
                 </h3>
                 <p className="text-sm sm:text-base md:text-xl text-gray-600">
@@ -351,7 +376,7 @@ function App() {
             <div className="flex items-start gap-4 sm:gap-6 md:gap-8">
               <div className="text-4xl sm:text-5xl md:text-7xl flex-shrink-0">🖋️</div>
               <div className="text-left">
-                <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold mb-1 sm:mb-2 md:mb-3">
+                <h3 className="text-xl sm:text-2xl md:text-3xl font-semibold text-gray-900 mb-1 sm:mb-2 md:mb-3">
                   훈/음 → 한자 쓰기
                 </h3>
                 <p className="text-sm sm:text-base md:text-xl text-gray-600">
