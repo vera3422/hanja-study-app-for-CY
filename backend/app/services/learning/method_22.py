@@ -1,6 +1,7 @@
 # app/services/learning/method_22.py
 
 from typing import Dict, Any
+import unicodedata
 
 from app.services.data_loader import df
 from app.services.srs import srs_manager
@@ -9,9 +10,20 @@ from app.services.checker import _get_joined_option
 from .base import LearningMethod
 
 
+def _normalize_hanja(s: str) -> str:
+    """CJK 호환 한자(Compatibility Ideograph)를 표준 통합 한자로 정규화.
+    데이터 CSV에 있는 車/不/金 등과 인식 엔진이 반환하는 車/不/金이
+    코드포인트가 달라도 동일 글자로 비교되도록 한다 (NFKC).
+    """
+    if not s:
+        return ""
+    return unicodedata.normalize("NFKC", s.strip())
+
+
 class Method22(LearningMethod):
     """2-2: 훈/음 → 한자 (쓰기 입력)
-    현재는 텍스트 입력으로 검증. 추후 터치 필기 + 인식으로 교체 예정.
+    필기 인식 결과(표준 CJK)와 데이터 한자(일부 Compatibility Ideograph)를
+    NFKC 정규화 후 비교한다.
     """
 
     @property
@@ -52,8 +64,8 @@ class Method22(LearningMethod):
         submitted: str,
         **kwargs
     ) -> Dict[str, Any]:
-        # 현재는 텍스트 exact match. 추후 필기 인식 결과와 비교하도록 확장
-        correct = (submitted.strip() == hanja.strip())
+        # 필기 인식 결과와 데이터 한자 비교 시 Compatibility Ideograph 차이 보정
+        correct = (_normalize_hanja(submitted) == _normalize_hanja(hanja))
 
         srs_manager.update_weight(user_id, grade, hanja, correct, method=self.method_id)
 

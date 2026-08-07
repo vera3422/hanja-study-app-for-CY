@@ -42,9 +42,17 @@ export function getInputKind(type: string): InputKind {
   return 'text';
 }
 
-/** 채점용 정규화 */
+/** 채점용 정규화 (텍스트: 공백·대소문자) */
 function normalizeText(s: string): string {
   return s.replace(/\s+/g, '').trim().toLowerCase();
+}
+
+/** 한자 채점용 정규화: CJK 호환 한자(Compatibility Ideograph) → 표준 통합 한자 (NFKC)
+ *  예: 旅行 → 旅行, 禮節 → 禮節, 樂 → 樂
+ *  필기 인식 결과(표준 코드)와 기출 CSV 정답(일부 호환 코드)을 동일하게 비교하기 위함
+ */
+function normalizeHanja(s: string): string {
+  return (s || '').normalize('NFKC').replace(/\s+/g, '').trim();
 }
 
 /** 보기 번호 추출 (① → ①, "1" → 가능하면 원문자 매핑은 하지 않고 원문 비교) */
@@ -68,8 +76,8 @@ export function checkExamAnswer(q: ExamQuestion, submitted: string): boolean {
     if (m && m[0] === ans) return true;
     return false;
   }
-  // 한자: 공백 제거 후 exact
-  return normalizeText(submitted) === normalizeText(correct);
+  // 한자(단·복수 글자): NFKC 정규화 후 비교 (호환 한자 ↔ 표준 한자)
+  return normalizeHanja(submitted) === normalizeHanja(correct);
 }
 
 interface ExamPlayerProps {

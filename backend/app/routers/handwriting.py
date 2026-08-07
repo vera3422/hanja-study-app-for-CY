@@ -135,8 +135,9 @@ def recognize_handwriting(body: RecognizeRequest):
     height = max(int(body.height or 280), 50)
     language = (body.language or "zh_TW").replace("-", "_")
     max_results = body.max_results or 8
-    # 단글자 필터로 일부가 빠지므로 Google에는 여유 있게 요청 후 최종 max_results개만 반환
-    google_num = min(max(max_results * 3, 16), 20)
+    # Google 인식 성능이 우수하므로 요청 개수를 최종 목표(max_results)와 동일하게 맞춤.
+    # 단글자 필터는 유지하되, 여유분(16~20) 요청은 더 이상 하지 않음.
+    google_num = max_results
 
     payload = {
         "options": "enable_pre_space",
