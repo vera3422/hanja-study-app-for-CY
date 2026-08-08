@@ -14,13 +14,15 @@ import ExamPlayer from './ExamPlayer';
 
 interface MethodProps {
   onBackToMenu: () => void;
+  /** 정답/오답 표시 시점: each=매 문항, end=마지막에만 (기본 each) */
+  feedbackMode?: 'each' | 'end';
 }
 
 type Phase = 'setup' | 'playing';
 
 const COUNT_OPTIONS = [10, 20, 30, 50, 100];
 
-export default function Method42({ onBackToMenu }: MethodProps) {
+export default function Method42({ onBackToMenu, feedbackMode = 'each' }: MethodProps) {
   const [phase, setPhase] = useState<Phase>('setup');
   const [levels, setLevels] = useState<string[]>([]);
   const [selectedLevel, setSelectedLevel] = useState('4급');
@@ -191,6 +193,7 @@ export default function Method42({ onBackToMenu }: MethodProps) {
         subtitle={`${questions.length}문항 · ${typeLabel} · ${sessLabel}`}
         onBackToMenu={handleBackToSetup}
         onRestart={handleRestart}
+        feedbackMode={feedbackMode}
       />
     );
   }
@@ -200,7 +203,7 @@ export default function Method42({ onBackToMenu }: MethodProps) {
     <div className="min-h-screen bg-gray-50 py-8 sm:py-12 px-4 sm:px-6">
       <div className="max-w-lg mx-auto text-center">
         <div className="text-4xl sm:text-5xl md:text-6xl mb-4">🎲</div>
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2">
           랜덤 기출 풀이
         </h2>
         <p className="text-sm sm:text-base text-gray-600 mb-6">

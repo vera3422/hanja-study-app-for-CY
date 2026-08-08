@@ -200,18 +200,60 @@ function StudyMenuPage({
   );
 }
 
+/** 기출 정답/오답 표시 시점 */
+export type ExamFeedbackMode = 'each' | 'end';
+
 // ---------- 기출문제 메뉴 (4-1, 4-2) ----------
-function ExamMenuPage() {
+function ExamMenuPage({
+  feedbackMode,
+  setFeedbackMode,
+}: {
+  feedbackMode: ExamFeedbackMode;
+  setFeedbackMode: (m: ExamFeedbackMode) => void;
+}) {
   const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-16">
-        <div className="max-w-md mx-auto text-center mb-10 sm:mb-12">
+        <div className="max-w-md mx-auto text-center mb-8 sm:mb-10">
           <h2 className="text-2xl sm:text-3xl font-semibold text-gray-900 mb-2">기출문제 풀이</h2>
           <p className="text-sm sm:text-base text-gray-500">
             실제 시험 문항으로 연습합니다 (SRS 미적용)
           </p>
+        </div>
+
+        {/* 정답/오답 표시 시점 선택 — 학습 방법 버튼 상단 */}
+        <div className="max-w-2xl mx-auto mb-6 sm:mb-8">
+          <div className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow-sm border border-gray-100">
+            <p className="text-lg sm:text-2xl font-medium text-gray-700 mb-3 text-center">
+              정답/오답 표시
+            </p>
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+              <button
+                type="button"
+                onClick={() => setFeedbackMode('each')}
+                className={`flex-1 py-3 sm:py-3.5 px-4 rounded-xl sm:rounded-2xl border-2 text-sm sm:text-base font-medium transition-colors ${
+                  feedbackMode === 'each'
+                    ? 'border-indigo-500 bg-indigo-50 text-indigo-800'
+                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                }`}
+              >
+                1문제 풀 때마다 보기
+              </button>
+              <button
+                type="button"
+                onClick={() => setFeedbackMode('end')}
+                className={`flex-1 py-3 sm:py-3.5 px-4 rounded-xl sm:rounded-2xl border-2 text-sm sm:text-base font-medium transition-colors ${
+                  feedbackMode === 'end'
+                    ? 'border-indigo-500 bg-indigo-50 text-indigo-800'
+                    : 'border-gray-200 bg-white text-gray-600 hover:border-gray-300'
+                }`}
+              >
+                마지막에 한 번에 보기
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className="max-w-2xl mx-auto space-y-4 sm:space-y-6 md:space-y-8">
@@ -407,6 +449,8 @@ function App() {
   // 학습 하기 / 맞추기 급수를 서로 독립적으로 관리
   const [studyLevel, setStudyLevel] = useState('8급');
   const [quizLevel, setQuizLevel] = useState('8급');
+  // 기출: 정답/오답 표시 시점 (each = 매 문항, end = 마지막에만)
+  const [examFeedbackMode, setExamFeedbackMode] = useState<ExamFeedbackMode>('each');
 
   return (
     <Routes>
@@ -491,12 +535,22 @@ function App() {
       />
 
       {/* 기출 */}
-      <Route path="/exam" element={<ExamMenuPage />} />
+      <Route
+        path="/exam"
+        element={
+          <ExamMenuPage
+            feedbackMode={examFeedbackMode}
+            setFeedbackMode={setExamFeedbackMode}
+          />
+        }
+      />
       <Route
         path="/exam/4-1"
         element={
           <BackToExamMenu>
-            {(go) => <Method41 onBackToMenu={go} />}
+            {(go) => (
+              <Method41 onBackToMenu={go} feedbackMode={examFeedbackMode} />
+            )}
           </BackToExamMenu>
         }
       />
@@ -504,7 +558,9 @@ function App() {
         path="/exam/4-2"
         element={
           <BackToExamMenu>
-            {(go) => <Method42 onBackToMenu={go} />}
+            {(go) => (
+              <Method42 onBackToMenu={go} feedbackMode={examFeedbackMode} />
+            )}
           </BackToExamMenu>
         }
       />

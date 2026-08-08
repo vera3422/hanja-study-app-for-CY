@@ -13,11 +13,13 @@ import ExamPlayer from './ExamPlayer';
 
 interface MethodProps {
   onBackToMenu: () => void;
+  /** 정답/오답 표시 시점: each=매 문항, end=마지막에만 (기본 each) */
+  feedbackMode?: 'each' | 'end';
 }
 
 type Phase = 'setup' | 'playing';
 
-export default function Method41({ onBackToMenu }: MethodProps) {
+export default function Method41({ onBackToMenu, feedbackMode = 'each' }: MethodProps) {
   const [phase, setPhase] = useState<Phase>('setup');
   const [levels, setLevels] = useState<string[]>([]);
   const [selectedLevel, setSelectedLevel] = useState('4급');
@@ -134,6 +136,7 @@ export default function Method41({ onBackToMenu }: MethodProps) {
         subtitle={`번호순 풀이${dateLabel}`}
         onBackToMenu={handleBackToSetup}
         onRestart={handleRestart}
+        feedbackMode={feedbackMode}
       />
     );
   }
@@ -143,7 +146,7 @@ export default function Method41({ onBackToMenu }: MethodProps) {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 sm:p-6">
       <div className="text-center max-w-md w-full">
         <div className="text-4xl sm:text-5xl md:text-6xl mb-4 sm:mb-6">📜</div>
-        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2">
           회차별 기출 풀이
         </h2>
         <p className="text-sm sm:text-base text-gray-600 mb-6 sm:mb-8">

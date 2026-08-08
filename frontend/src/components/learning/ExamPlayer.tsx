@@ -86,6 +86,12 @@ interface ExamPlayerProps {
   subtitle?: string;
   onBackToMenu: () => void;
   onRestart: () => void;
+  /**
+   * 정답/오답 표시 시점
+   * - each: 1문제 풀 때마다 표시 (기본)
+   * - end: 채점만 하고 표시는 마지막 결과 화면에서만
+   */
+  feedbackMode?: 'each' | 'end';
 }
 
 export default function ExamPlayer({
@@ -94,7 +100,9 @@ export default function ExamPlayer({
   subtitle,
   onBackToMenu,
   onRestart,
+  feedbackMode = 'each',
 }: ExamPlayerProps) {
+  const showImmediateFeedback = feedbackMode !== 'end';
   const [index, setIndex] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [isCorrect, setIsCorrect] = useState(false);
@@ -614,8 +622,8 @@ export default function ExamPlayer({
             </span>
           </div>
 
-          {/* 문제 본문 */}
-          <QuestionStem q={current} revealed={submitted} />
+          {/* 문제 본문 — 즉시 피드백 모드에서만 제출 후 강조 변경 */}
+          <QuestionStem q={current} revealed={submitted && showImmediateFeedback} />
 
           {/* ----- 입력 영역 ----- */}
           {!submitted && (
@@ -767,8 +775,8 @@ export default function ExamPlayer({
             </div>
           )}
 
-          {/* ----- 채점 결과 ----- */}
-          {submitted && (
+          {/* ----- 채점 결과 (즉시 피드백 모드) ----- */}
+          {submitted && showImmediateFeedback && (
             <div className="mt-5 sm:mt-6">
               <div
                 className={`text-center text-2xl sm:text-3xl font-bold mb-4 ${
@@ -819,6 +827,40 @@ export default function ExamPlayer({
                     />
                   )}
                 </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={handleNext}
+                className="w-full py-3 sm:py-5 bg-indigo-600 text-white rounded-2xl sm:rounded-3xl text-base sm:text-xl font-medium"
+              >
+                {index + 1 >= total ? '결과 보기' : '다음 문제'}
+              </button>
+            </div>
+          )}
+
+          {/* ----- 제출만 확인 (마지막에 한 번에 보기 모드) — 정답/오답 비공개 ----- */}
+          {submitted && !showImmediateFeedback && (
+            <div className="mt-5 sm:mt-6">
+              <div className="p-4 rounded-xl sm:rounded-2xl border border-gray-200 bg-gray-50 text-center mb-4">
+                <p className="text-base sm:text-lg font-medium text-gray-700">
+                  답안이 제출되었습니다
+                </p>
+                <p className="text-xs sm:text-sm text-gray-500 mt-1">
+                  정답/오답은 모든 문제를 푼 뒤 결과 화면에서 확인합니다
+                </p>
+                {userAnswer && (
+                  <p className="mt-2 text-sm text-gray-600">
+                    제출:{' '}
+                    <span
+                      className={`font-medium ${
+                        hasHanja(userAnswer) ? 'text-2xl sm:text-3xl' : ''
+                      }`}
+                    >
+                      {userAnswer}
+                    </span>
+                  </p>
+                )}
               </div>
 
               <button
