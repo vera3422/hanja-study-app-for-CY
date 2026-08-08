@@ -17,9 +17,10 @@ router = APIRouter(prefix="/api/exam", tags=["exam"])
 def get_exam_meta():
     """
     기출 메타 정보 한 번에 조회.
-    - levels: 사용 가능한 급수
-    - sessions: 급수별 회차 목록 (최신순)
-    - types: 문제 유형 코드 + 한글 라벨
+    - levels: 사용 가능한 급수 (기출 CSV 존재 분)
+    - sessions: 급수별 회차 목록 (해당 급수 CSV에 있는 회차만, 최신순)
+    - types: 전체 유형 (하위 호환)
+    - types_by_level: 급수별 유형 (4-2에서 선택 급수 유형 버튼만 표시)
     """
     if exam_loader.exam_df is None:
         return {
@@ -27,6 +28,7 @@ def get_exam_meta():
             "levels": [],
             "sessions": {},
             "types": [],
+            "types_by_level": {},
         }
 
     levels = exam_loader.get_levels()
@@ -38,6 +40,7 @@ def get_exam_meta():
         "levels": levels,
         "sessions": sessions_by_level,
         "types": exam_loader.get_types(),
+        "types_by_level": exam_loader.get_types_by_level(),
         "total_questions": int(len(exam_loader.exam_df)),
     }
 
@@ -72,11 +75,16 @@ def get_exam_sessions(
 
 
 @router.get("/types")
-def get_exam_types():
-    """문제 유형 목록 (코드 + 한글 라벨)"""
+def get_exam_types(
+    level: Optional[str] = Query(None, description="급수 (예: 8급). 지정 시 해당 급수 유형만"),
+):
+    """문제 유형 목록 (코드 + 한글 라벨). level 지정 시 해당 급수에 존재하는 유형만."""
     if exam_loader.exam_df is None:
-        return {"error": "기출 데이터가 로드되지 않았습니다.", "types": []}
-    return {"types": exam_loader.get_types()}
+        return {"error": "기출 데이터가 로드되지 않았습니다.", "types": [], "level": level}
+    return {
+        "level": level,
+        "types": exam_loader.get_types(level),
+    }
 
 
 @router.get("/questions")

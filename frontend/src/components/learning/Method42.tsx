@@ -27,6 +27,8 @@ export default function Method42({ onBackToMenu, feedbackMode = 'each' }: Method
   const [levels, setLevels] = useState<string[]>([]);
   const [selectedLevel, setSelectedLevel] = useState('4급');
   const [sessions, setSessions] = useState<ExamSessionInfo[]>([]);
+  /** 급수별 유형 맵 (meta.types_by_level). 선택 급수에 해당하는 버튼만 표시 */
+  const [typesByLevel, setTypesByLevel] = useState<Record<string, ExamTypeInfo[]>>({});
   const [types, setTypes] = useState<ExamTypeInfo[]>([]);
   // 회차 범위: null = 전체 (시작·종료 모두 null일 때)
   const [sessionFrom, setSessionFrom] = useState<number | null>(null);
@@ -55,7 +57,16 @@ export default function Method42({ onBackToMenu, feedbackMode = 'each' }: Method
         const initial = lv.includes('4급') ? '4급' : lv[0];
         setSelectedLevel(initial);
         setSessions(meta.sessions?.[initial] ?? []);
-        setTypes(meta.types ?? []);
+
+        // 급수별 유형: types_by_level 우선, 없으면 전체 types로 폴백
+        const byLevel = meta.types_by_level ?? {};
+        setTypesByLevel(byLevel);
+        const levelTypes =
+          byLevel[initial]?.length
+            ? byLevel[initial]
+            : meta.types ?? [];
+        setTypes(levelTypes);
+
         // 기본: 전체 유형·회차
         setSelectedTypes([]);
         setSessionFrom(null);
@@ -73,6 +84,7 @@ export default function Method42({ onBackToMenu, feedbackMode = 'each' }: Method
     };
   }, []);
 
+  // 급수 변경 시: 해당 급수 회차만 + 해당 급수 유형만 표시, 선택값 초기화
   useEffect(() => {
     if (!selectedLevel) return;
     let cancelled = false;
@@ -88,10 +100,20 @@ export default function Method42({ onBackToMenu, feedbackMode = 'each' }: Method
         /* ignore */
       }
     })();
+
+    // 선택 급수에 존재하는 유형 버튼만 표시
+    const levelTypes = typesByLevel[selectedLevel];
+    if (levelTypes && levelTypes.length > 0) {
+      setTypes(levelTypes);
+      // 이전 급수에서 고른 유형 중 현재 급수에 없는 것은 제거
+      const allowed = new Set(levelTypes.map((t) => t.code));
+      setSelectedTypes((prev) => prev.filter((c) => allowed.has(c)));
+    }
+
     return () => {
       cancelled = true;
     };
-  }, [selectedLevel]);
+  }, [selectedLevel, typesByLevel]);
 
   const toggleType = (code: string) => {
     setSelectedTypes((prev) =>

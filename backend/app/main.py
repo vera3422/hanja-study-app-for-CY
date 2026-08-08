@@ -1,5 +1,8 @@
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.services.data_loader import load_hanja_data
 from app.services.exam_loader import load_exam_data
@@ -9,6 +12,16 @@ from app.routers.exam import router as exam_router
 from app.routers.handwriting import router as handwriting_router
 
 app = FastAPI(title="한자능력검정 학습 앱")
+
+# 획순 이미지 등 정적 파일 (data/exam-strokes → /exam-strokes/...)
+_data_dir = Path(__file__).resolve().parent.parent / "data"
+_stroke_dir = _data_dir / "exam-strokes"
+_stroke_dir.mkdir(parents=True, exist_ok=True)
+app.mount(
+    "/exam-strokes",
+    StaticFiles(directory=str(_stroke_dir)),
+    name="exam-strokes",
+)
 
 # CORS 설정 (프론트엔드에서 호출가능하도록 해줌)
 app.add_middleware(

@@ -18,7 +18,9 @@ import pandas as pd
 exam_df: Optional[pd.DataFrame] = None
 
 # 유형 코드 → 표시용 한글 이름 (메타 API용)
+# v.2.0: 전 급수 지원을 위해 신규 유형 9종 추가 (2026-08-08)
 TYPE_LABELS: Dict[str, str] = {
+    # 기존 (4급 기준)
     "dokum": "독음 (讀音)",
     "hunum": "훈·음",
     "bushu": "부수",
@@ -30,7 +32,17 @@ TYPE_LABELS: Dict[str, str] = {
     "uut_select": "뜻 고르기",
     "seong-eo": "성어",
     "hanjaeo_write": "한자어 쓰기",
-    "mean": "단어 뜻",  # 표시용 라벨만 변경 (코드 mean 유지)
+    "mean": "단어 뜻",
+    # 신규 (v.2.0)
+    "select_hanja": "한자 고르기",
+    "select_hun": "훈 고르기",
+    "select_eum": "음 고르기",
+    "stroke": "획순",
+    "banui_select": "반의어 고르기",
+    "mean_select": "뜻 맞는 한자어 고르기",
+    "mean_to_hanjaeo": "뜻을 보고 한자어 쓰기",
+    "invalid": "성립하지 않는 단어 고르기",
+    "hanmun": "한문 독해",
 }
 
 
@@ -65,6 +77,10 @@ def _parse_options(raw: Any) -> Optional[List[str]]:
         return None
 
 
+
+
+
+
 def _row_to_question(row: pd.Series) -> Dict[str, Any]:
     """DataFrame 한 행 → API 응답용 dict"""
     return {
@@ -79,6 +95,9 @@ def _row_to_question(row: pd.Series) -> Dict[str, Any]:
         "options": _parse_options(row.get("options")),
         "answer": _safe_str(row.get("answer")),
         "answer_display": _safe_str(row.get("answer_display")),
+        # 획순: Backend 정적 경로 (예: exam-strokes/stroke_8_113_49.png)
+        # Frontend는 API_BASE_URL + '/' + image_path 로 로드
+        "image_path": _safe_str(row.get("image_path")),
     }
 
 
@@ -125,14 +144,15 @@ def load_exam_data() -> Optional[pd.DataFrame]:
 
 
 def get_levels() -> List[str]:
-    """사용 가능한 급수 목록 (정렬: 4급 등 존재하는 것만)"""
+    """사용 가능한 급수 목록 (기출 CSV에 실제 존재하는 것만, 급수 관례 순)"""
     if exam_df is None or exam_df.empty:
         return []
     levels = exam_df["level"].dropna().astype(str).unique().tolist()
-    # 급수 관례 순서로 정렬 시도
+    # CSV level 값과 동일하게 II 표기 사용 (Ⅱ 아님)
     grade_order = [
-        "8급", "7급Ⅱ", "7급", "6급Ⅱ", "6급", "5급Ⅱ", "5급",
-        "4급Ⅱ", "4급", "3급Ⅱ", "3급", "2급", "1급",
+        "8급", "7급II", "7급", "6급II", "6급", "5급II", "5급",
+        "4급II", "4급", "3급II", "3급", "2급", "1급",
+        "특급", "특급II",
     ]
     order_map = {g: i for i, g in enumerate(grade_order)}
     return sorted(levels, key=lambda x: order_map.get(x, 999))
@@ -171,11 +191,19 @@ def get_sessions(level: Optional[str] = None) -> List[Dict[str, Any]]:
     return rows
 
 
-def get_types() -> List[Dict[str, str]]:
-    """문제 유형 코드 + 한글 라벨 목록 (데이터에 실제 존재하는 것만)"""
+def get_types(level: Optional[str] = None) -> List[Dict[str, str]]:
+    """
+    문제 유형 코드 + 한글 라벨 목록 (데이터에 실제 존재하는 것만).
+    level 지정 시 해당 급수 CSV에 있는 유형만 반환.
+    """
     if exam_df is None or exam_df.empty:
         return []
-    present = exam_df["question_type"].dropna().astype(str).unique().tolist()
+    df = exam_df
+    if level:
+        df = df[df["level"].astype(str) == level]
+    if df.empty:
+        return []
+    present = df["question_type"].dropna().astype(str).unique().tolist()
     # TYPE_LABELS 순서 유지
     result = []
     for code, label in TYPE_LABELS.items():
@@ -186,6 +214,13 @@ def get_types() -> List[Dict[str, str]]:
         if code not in TYPE_LABELS:
             result.append({"code": code, "label": code})
     return result
+
+
+def get_types_by_level() -> Dict[str, List[Dict[str, str]]]:
+    """급수별 유형 목록. meta API에서 4-2 유형 버튼 필터용."""
+    if exam_df is None or exam_df.empty:
+        return {}
+    return {lv: get_types(lv) for lv in get_levels()}
 
 
 def get_session_questions(

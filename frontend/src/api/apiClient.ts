@@ -1,4 +1,5 @@
-const API_BASE_URL = import.meta.env.PROD
+/** Backend API 및 정적 파일(획순 이미지 등) 기준 URL */
+export const API_BASE_URL = import.meta.env.PROD
   ? 'https://hanja-study-app-for-cy-backend.onrender.com'  // 배포(GitHub Pages)용
   : 'http://127.0.0.1:8000'; //로컬 개발용
 
@@ -52,6 +53,10 @@ export interface ExamQuestion {
   options: string[] | null;
   answer: string;
   answer_display: string;
+  /** 획순: Backend 상대 경로 (예: exam-strokes/stroke_8_113_49.png)
+   *  실제 URL = API_BASE_URL + '/' + image_path
+   */
+  image_path?: string;
 }
 
 export interface ExamSessionInfo {
@@ -69,7 +74,10 @@ export interface ExamTypeInfo {
 export interface ExamMetaResponse {
   levels: string[];
   sessions: Record<string, ExamSessionInfo[]>;
+  /** 전체 유형 (하위 호환) */
   types: ExamTypeInfo[];
+  /** 급수별 유형 — 4-2에서 선택 급수에 해당하는 유형 버튼만 표시 */
+  types_by_level?: Record<string, ExamTypeInfo[]>;
   total_questions: number;
   error?: string;
 }

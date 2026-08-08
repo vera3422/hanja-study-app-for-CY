@@ -43,10 +43,12 @@ export default function Method41({ onBackToMenu, feedbackMode = 'each' }: Method
           setError(meta.error);
           return;
         }
+        // 기출 CSV가 있는 모든 급수 (8급~특급II)
         const lv = meta.levels?.length ? meta.levels : ['4급'];
         setLevels(lv);
         const initial = lv.includes('4급') ? '4급' : lv[0];
         setSelectedLevel(initial);
+        // 선택 급수의 기출 CSV에 실제 존재하는 회차만
         const sess = meta.sessions?.[initial] ?? [];
         setSessions(sess);
         if (sess.length > 0) setSelectedSession(sess[0].session);

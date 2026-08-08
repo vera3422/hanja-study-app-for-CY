@@ -4,7 +4,7 @@
  * - 유형별 입력: 텍스트 / 보기 버튼 / 필기+8후보 (단·복수 글자)
  */
 import { useState, useRef, useEffect, useCallback } from 'react';
-import type { ExamQuestion } from '../../api/apiClient';
+import { API_BASE_URL, type ExamQuestion } from '../../api/apiClient';
 import HandwritingPad, { type HandwritingPadHandle } from './HandwritingPad';
 import { recognizeCharsByEngine } from '../../lib/recognizeEngines';
 import HanjaDictLink from './HanjaDictLink';
@@ -23,13 +23,52 @@ function getPadSize(): { width: number; height: number } {
 }
 
 /** 텍스트 입력 유형 */
-const TEXT_TYPES = new Set(['dokum', 'hunum']);
-/** 객관식(보기 버튼) 유형 */
-const CHOICE_TYPES = new Set(['jangum', 'uut_select']);
+const TEXT_TYPES = new Set(['dokum', 'hunum', 'mean']);
+/**
+ * 객관식(보기 버튼) 유형
+ * - 기존 4급: jangum, uut_select
+ * - v.2.0 신규: select_*, banui_select, mean_select, invalid, stroke
+ */
+const CHOICE_TYPES = new Set([
+  'jangum',
+  'uut_select',
+  'select_hanja',
+  'select_hun',
+  'select_eum',
+  'banui_select',
+  'mean_select',
+  'invalid',
+  'stroke',
+]);
 /** 한자 필기 (1글자) */
 const HANJA_SINGLE = new Set(['bushu', 'yakja', 'banui', 'yui', 'seong-eo']);
 /** 한자 필기 (복수 글자 — 글자 단위 순차 입력) */
-const HANJA_MULTI = new Set(['dongeum', 'hanjaeo_write']);
+const HANJA_MULTI = new Set(['dongeum', 'hanjaeo_write', 'mean_to_hanjaeo']);
+
+/** 화면 표시용 유형 한글명 (뱃지) */
+const TYPE_DISPLAY: Record<string, string> = {
+  dokum: '독음',
+  hunum: '훈·음',
+  bushu: '부수',
+  yakja: '약자',
+  jangum: '장음',
+  banui: '반의·상대',
+  yui: '유의',
+  dongeum: '동음어',
+  uut_select: '뜻 고르기',
+  'seong-eo': '성어',
+  hanjaeo_write: '한자어 쓰기',
+  mean: '단어 뜻',
+  select_hanja: '한자 고르기',
+  select_hun: '훈 고르기',
+  select_eum: '음 고르기',
+  stroke: '획순',
+  banui_select: '반의어 고르기',
+  mean_select: '뜻 맞는 한자어 고르기',
+  mean_to_hanjaeo: '뜻을 보고 한자어 쓰기',
+  invalid: '성립하지 않는 단어 고르기',
+  hanmun: '한문 독해',
+};
 
 export type InputKind = 'text' | 'choice' | 'hanja_single' | 'hanja_multi';
 
@@ -38,8 +77,12 @@ export function getInputKind(type: string): InputKind {
   if (CHOICE_TYPES.has(type)) return 'choice';
   if (HANJA_MULTI.has(type)) return 'hanja_multi';
   if (HANJA_SINGLE.has(type)) return 'hanja_single';
-  // 알 수 없는 유형 → 텍스트 폴백
+  // 알 수 없는 유형 → 텍스트 폴백 (hanmun 등)
   return 'text';
+}
+
+function typeDisplayLabel(type: string): string {
+  return TYPE_DISPLAY[type] || type;
 }
 
 /** 채점용 정규화 (텍스트: 공백·대소문자) */
@@ -349,8 +392,7 @@ export default function ExamPlayer({
         );
       }
 
-      const typeLabel =
-        q.question_type === 'mean' ? '단어 뜻' : q.question_type;
+      const typeLabel = typeDisplayLabel(q.question_type);
 
       return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 sm:p-6 relative">
@@ -467,7 +509,7 @@ export default function ExamPlayer({
       return (
         <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4 sm:p-6 relative">
           <FilterDropdown />
-          <div className="text-center max-w-md w-full mt-10 sm:mt-8">
+          <div className="text-center max-w-lg w-full mt-10 sm:mt-8">
             <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">세부 결과</h2>
             <p className="text-sm text-gray-500 mb-1">{title}</p>
             {subtitle && <p className="text-xs text-gray-400 mb-4">{subtitle}</p>}
@@ -477,13 +519,13 @@ export default function ExamPlayer({
                 : `오답 ${filteredIndices.length}문항 · 번호를 누르면 복습`}
             </p>
 
-            <div className="bg-white p-5 sm:p-6 rounded-2xl sm:rounded-3xl shadow">
+            <div className="bg-white p-4 sm:p-6 rounded-2xl sm:rounded-3xl shadow">
               {filteredIndices.length === 0 ? (
                 <p className="text-gray-500 py-8">
                   {resultFilter === 'wrong' ? '오답이 없습니다.' : '문항이 없습니다.'}
                 </p>
               ) : (
-                <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
                   {filteredIndices.map((i) => {
                     const ok = results[i]?.correct === true;
                     const wrong = results[i]?.correct === false;
@@ -496,7 +538,7 @@ export default function ExamPlayer({
                           setFilterMenuOpen(false);
                           setResultPhase('review');
                         }}
-                        className={`py-3 sm:py-4 rounded-xl border-2 text-lg sm:text-xl font-bold transition-colors ${
+                        className={`py-2.5 sm:py-3 rounded-lg sm:rounded-xl border-2 text-base sm:text-lg font-bold transition-colors ${
                           ok
                             ? 'border-blue-200 bg-blue-50 text-blue-600 hover:border-blue-400'
                             : wrong
@@ -613,9 +655,7 @@ export default function ExamPlayer({
           {/* 유형 뱃지 + 회차·번호 */}
           <div className="flex flex-wrap items-center gap-2 mb-4 text-xs sm:text-sm text-gray-400">
             <span className="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-600 font-medium">
-              {current.question_type === 'mean'
-                ? '단어 뜻'
-                : current.question_type}
+              {typeDisplayLabel(current.question_type)}
             </span>
             <span>
               {current.level} · {current.session}회 · {current.question_no}번
@@ -655,18 +695,24 @@ export default function ExamPlayer({
                 </div>
               )}
 
-              {kind === 'choice' && current.options && (
+              {kind === 'choice' && (
                 <div className="space-y-2 sm:space-y-3">
-                  {current.options.map((opt) => (
-                    <button
-                      key={opt}
-                      type="button"
-                      onClick={() => handleChoiceSelect(opt)}
-                      className="w-full text-left px-4 py-3 sm:py-4 rounded-xl sm:rounded-2xl border-2 border-indigo-100 hover:border-indigo-400 hover:bg-indigo-50 text-base sm:text-lg font-medium text-gray-800 transition-colors"
-                    >
-                      <ChoiceOptionLabel text={opt} />
-                    </button>
-                  ))}
+                  {current.options && current.options.length > 0 ? (
+                    current.options.map((opt, optIdx) => (
+                      <button
+                        key={`${optIdx}-${opt}`}
+                        type="button"
+                        onClick={() => handleChoiceSelect(opt)}
+                        className="w-full text-left px-4 py-3 sm:py-4 rounded-xl sm:rounded-2xl border-2 border-indigo-100 hover:border-indigo-400 hover:bg-indigo-50 text-base sm:text-lg font-medium text-gray-800 transition-colors"
+                      >
+                        <ChoiceOptionLabel text={opt} />
+                      </button>
+                    ))
+                  ) : (
+                    <p className="text-sm text-red-500 text-center py-2">
+                      보기 데이터가 없습니다. (유형: {current.question_type})
+                    </p>
+                  )}
                 </div>
               )}
 
@@ -915,15 +961,23 @@ function getExamDictQuery(q: ExamQuestion): string {
     case 'dokum':
     case 'uut_select':
     case 'mean':
+    case 'mean_select':
+    case 'select_hanja':
+    case 'select_hun':
+    case 'select_eum':
       return target || extractHanjaOnly(q.question_text || '');
 
     case 'hunum':
     case 'bushu':
     case 'yakja':
+    case 'stroke':
       return target;
 
     case 'jangum':
-      return extractJangumDictWord(q);
+    case 'banui_select':
+    case 'invalid':
+      // 정답 번호에 해당하는 보기에서 한자 추출
+      return extractJangumDictWord(q) || target;
 
     case 'banui':
     case 'yui':
@@ -931,6 +985,7 @@ function getExamDictQuery(q: ExamQuestion): string {
 
     case 'dongeum':
     case 'hanjaeo_write':
+    case 'mean_to_hanjaeo':
       return extractHanjaOnly(answerDisp || answer) || answerDisp || answer;
 
     case 'seong-eo':
@@ -1023,10 +1078,81 @@ function ChoiceOptionLabel({ text }: { text: string }) {
   );
 }
 
-/** 문제 본문 표시: target(한자)만 2배, 한글 문장은 기존 크기 유지 */
+/** 문제 본문 표시: target(한자)만 2배, 한글 문장은 기존 크기 유지
+ *  획순(stroke): PDF에서 추출한 강조 획 이미지 표시
+ */
 function QuestionStem({ q, revealed }: { q: ExamQuestion; revealed: boolean }) {
   const text = q.question_text || '';
   const target = q.target || '';
+  const imagePath = (q.image_path || '').trim();
+
+  // 획순: Backend가 내려준 image_path → API_BASE_URL로 원본 PNG 로드
+  // 예: http://127.0.0.1:8000/exam-strokes/stroke_8_113_49.png
+  if (q.question_type === 'stroke') {
+    const levelSlug: Record<string, string> = {
+      '8급': '8',
+      '7급': '7',
+      '7급II': '7ii',
+      '6급': '6',
+      '6급II': '6ii',
+      '5급': '5',
+      '5급II': '5ii',
+    };
+    const slug = levelSlug[q.level] || '';
+    const rel = (
+      imagePath ||
+      (slug
+        ? `exam-strokes/stroke_${slug}_${q.session}_${q.question_no}.png`
+        : '')
+    )
+      .replace(/^\//, '')
+      .trim();
+
+    if (rel) {
+      const src = `${API_BASE_URL.replace(/\/$/, '')}/${rel
+        .split('/')
+        .map((seg) => encodeURIComponent(seg))
+        .join('/')}`;
+      return (
+        <div className="text-center my-4 sm:my-6">
+          <div className="inline-block rounded-xl bg-white border border-gray-200 p-4 sm:p-5 shadow-sm">
+            <img
+              src={src}
+              alt={target ? `획순: ${target}` : '획순 문제 이미지'}
+              className="mx-auto max-h-48 sm:max-h-56 w-auto object-contain"
+              draggable={false}
+              onError={(e) => {
+                const el = e.currentTarget;
+                el.style.display = 'none';
+                const fb = el.parentElement?.querySelector('[data-stroke-fallback]');
+                if (fb) (fb as HTMLElement).style.display = 'block';
+              }}
+            />
+            <p
+              data-stroke-fallback
+              className="hidden text-sm text-red-500 mt-2 max-w-xs break-all"
+            >
+              획순 이미지를 불러오지 못했습니다.
+              <br />
+              <span className="text-xs text-gray-400">{src}</span>
+              <br />
+              <span className="text-xs text-gray-400">
+                Backend 재시작 및 data/exam-strokes 폴더를 확인하세요.
+              </span>
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="text-center my-4 sm:my-6">
+        <div className="inline-block rounded-xl bg-amber-50 border border-amber-200 px-4 py-3 text-sm text-amber-800">
+          획순 이미지 경로가 없습니다 ({q.level} {q.session}회 {q.question_no}번)
+        </div>
+      </div>
+    );
+  }
 
   // jangum 등 본문 없는 경우
   if (!text && !target) {
