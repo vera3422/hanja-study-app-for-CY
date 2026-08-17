@@ -37,6 +37,7 @@ TYPE_LABELS: Dict[str, str] = {
     "select_hanja": "한자 고르기",
     "select_hun": "훈 고르기",
     "select_eum": "음 고르기",
+    "select_hanjaeo": "한자어 고르기",  # 밑줄 한글 단어 → 漢字語 보기 선택 (7급II 43-44 등)
     "stroke": "획순",
     "banui_select": "반의어 고르기",
     "mean_select": "뜻 맞는 한자어 고르기",

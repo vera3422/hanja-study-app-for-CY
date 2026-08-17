@@ -28,6 +28,7 @@ const TEXT_TYPES = new Set(['dokum', 'hunum', 'mean']);
  * 객관식(보기 버튼) 유형
  * - 기존 4급: jangum, uut_select
  * - v.2.0 신규: select_*, banui_select, mean_select, invalid, stroke
+ * - select_hanjaeo: 밑줄 한글 단어 → 漢字語 보기 선택 (7급II 43-44 등)
  */
 const CHOICE_TYPES = new Set([
   'jangum',
@@ -35,6 +36,7 @@ const CHOICE_TYPES = new Set([
   'select_hanja',
   'select_hun',
   'select_eum',
+  'select_hanjaeo',
   'banui_select',
   'mean_select',
   'invalid',
@@ -62,6 +64,7 @@ const TYPE_DISPLAY: Record<string, string> = {
   select_hanja: '한자 고르기',
   select_hun: '훈 고르기',
   select_eum: '음 고르기',
+  select_hanjaeo: '한자어 고르기',
   stroke: '획순',
   banui_select: '반의어 고르기',
   mean_select: '뜻 맞는 한자어 고르기',
@@ -966,6 +969,10 @@ function getExamDictQuery(q: ExamQuestion): string {
     case 'select_hun':
     case 'select_eum':
       return target || extractHanjaOnly(q.question_text || '');
+
+    case 'select_hanjaeo':
+      // 밑줄 한글 단어 → 漢字語 보기 선택: 정답 보기의 한자어를 사전 검색
+      return extractJangumDictWord(q) || extractHanjaOnly(answerDisp || target) || target;
 
     case 'hunum':
     case 'bushu':
