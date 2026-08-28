@@ -106,7 +106,7 @@ def get_exam_questions_random(
     count: int = Query(20, ge=1, le=200, description="가져올 문항 수 (1~200)"),
     types: Optional[str] = Query(
         None,
-        description="쉼표 구분 유형 필터 (예: dokum,hunum,bushu). 없으면 전체 유형",
+        description="쉼표 구분 유형 필터 (예: dokeum_W,huneum_W,busu_W). 없으면 전체 유형",
     ),
     sessions: Optional[str] = Query(
         None,

@@ -22,62 +22,104 @@ function getPadSize(): { width: number; height: number } {
   return { width: 280, height: 280 };
 }
 
-/** 텍스트 입력 유형 */
-const TEXT_TYPES = new Set(['dokum', 'hunum', 'mean']);
+/** 텍스트 입력 유형 (Master v.3 / 가이드 v.5.3) */
+const TEXT_TYPES = new Set(['dokeum_W', 'huneum_W', 'mean_W']);
 /**
- * 객관식(보기 버튼) 유형
- * - 기존 4급: jangum, uut_select
- * - v.2.0 신규: select_*, banui_select, mean_select, invalid, stroke
- * - select_hanjaeo: 밑줄 한글 단어 → 漢字語 보기 선택 (7급II 43-44 등)
+ * 객관식(보기 버튼) 유형 — options 있는 _S
+ * dongeumeo_S: 5급II·5급만. 4급II 이상 동음어 쓰기는 dongeumeo_W.
  */
 const CHOICE_TYPES = new Set([
-  'jangum',
-  'uut_select',
-  'select_hanja',
-  'select_hun',
-  'select_eum',
-  'select_hanjaeo',
-  'banui_select',
-  'mean_select',
-  'invalid',
-  'stroke',
+  'banui_S',
+  'banuiset_S',
+  'dongeum_S',
+  'dongeumeo_S',
+  'eum_S',
+  'hanja_S',
+  'hanjaeo_(eum)_S',
+  'hanjaeo_(mean)_S',
+  'hun_S',
+  'invalid_S',
+  'jangeum_S',
+  'mean_S',
+  'seongeo_S',
+  'stroke_S',
+  'yui_S',
 ]);
 /** 한자 필기 (1글자) */
-const HANJA_SINGLE = new Set(['bushu', 'yakja', 'banui', 'yui', 'seong-eo']);
+const HANJA_SINGLE = new Set([
+  'busu_W',
+  'yakja_W',
+  'banui_W',
+  'yui_W',
+  'seongeo_W',
+  'hanja_W',
+]);
 /** 한자 필기 (복수 글자 — 글자 단위 순차 입력) */
-const HANJA_MULTI = new Set(['dongeum', 'hanjaeo_write', 'mean_to_hanjaeo']);
+const HANJA_MULTI = new Set([
+  'hanjaeo_W',
+  'banuieo_W',
+  'dongeumeo_W',
+  'yuieo_W',
+]);
 
-/** 화면 표시용 유형 한글명 (뱃지) */
+/** 화면 표시용 유형 한글명 (뱃지) — Master data_v.3 29종 */
 const TYPE_DISPLAY: Record<string, string> = {
-  dokum: '독음',
-  hunum: '훈·음',
-  bushu: '부수',
-  yakja: '약자',
-  jangum: '장음',
-  banui: '반의·상대',
-  yui: '유의',
-  dongeum: '동음어',
-  uut_select: '뜻 고르기',
-  'seong-eo': '성어',
-  hanjaeo_write: '한자어 쓰기',
-  mean: '단어 뜻',
-  select_hanja: '한자 고르기',
-  select_hun: '훈 고르기',
-  select_eum: '음 고르기',
-  select_hanjaeo: '한자어 고르기',
-  stroke: '획순',
-  banui_select: '반의어 고르기',
-  mean_select: '뜻 맞는 한자어 고르기',
-  mean_to_hanjaeo: '뜻을 보고 한자어 쓰기',
-  invalid: '성립하지 않는 단어 고르기',
-  hanmun: '한문 독해',
+  banui_S: '반의 고르기',
+  banui_W: '반의 쓰기',
+  banuieo_W: '반의어 쓰기',
+  banuiset_S: '반의 set 고르기',
+  busu_W: '부수',
+  dokeum_W: '독음',
+  dongeum_S: '동음 고르기',
+  dongeumeo_S: '동음어 고르기',
+  dongeumeo_W: '동음어 쓰기',
+  eum_S: '음 고르기',
+  hanja_S: '한자 고르기',
+  hanja_W: '한자 쓰기',
+  'hanjaeo_(eum)_S': '한자어 고르기(독음)',
+  'hanjaeo_(mean)_S': '한자어 고르기(뜻)',
+  hanjaeo_W: '한자어 쓰기',
+  hanmun: '한문',
+  hun_S: '훈 고르기',
+  huneum_W: '훈·음',
+  invalid_S: '성립하지 않는 단어 고르기',
+  jangeum_S: '장음',
+  mean_S: '뜻 고르기',
+  mean_W: '단어 뜻',
+  seongeo_S: '성어 고르기',
+  seongeo_W: '성어 쓰기',
+  stroke_S: '획순',
+  yakja_W: '약자',
+  yui_S: '유의 고르기',
+  yui_W: '유의 쓰기',
+  yuieo_W: '유의어 쓰기',
 };
 
 export type InputKind = 'text' | 'choice' | 'hanja_single' | 'hanja_multi';
 
-export function getInputKind(type: string): InputKind {
+const CIRCLE_NUMS = ['①', '②', '③', '④', '⑤', '⑥', '⑦', '⑧', '⑨', '⑩', '⑪', '⑫'];
+
+/** 객관식 번호 키: "②" / "2" / "② 健康" → "2" */
+function choiceKey(s: string): string {
+  const t = (s || '').replace(/\s+/g, '').trim();
+  if (!t) return '';
+  const circled = t.match(/^[①②③④⑤⑥⑦⑧⑨⑩⑪⑫]/);
+  if (circled) {
+    const idx = CIRCLE_NUMS.indexOf(circled[0]);
+    return idx >= 0 ? String(idx + 1) : t;
+  }
+  const plain = t.match(/^(1[0-2]|[1-9])/);
+  return plain ? String(parseInt(plain[1], 10)) : t;
+}
+
+export function getInputKind(type: string, options?: string[] | null): InputKind {
   if (TEXT_TYPES.has(type)) return 'text';
-  if (CHOICE_TYPES.has(type)) return 'choice';
+  if (CHOICE_TYPES.has(type)) {
+    // _S인데 options가 비면 쓰기로 (안전망)
+    if (options && options.length > 0) return 'choice';
+    if (type.includes('eo') || type.includes('hanjaeo')) return 'hanja_multi';
+    return 'text';
+  }
   if (HANJA_MULTI.has(type)) return 'hanja_multi';
   if (HANJA_SINGLE.has(type)) return 'hanja_single';
   // 알 수 없는 유형 → 텍스트 폴백 (hanmun 등)
@@ -101,25 +143,23 @@ function normalizeHanja(s: string): string {
   return (s || '').normalize('NFKC').replace(/\s+/g, '').trim();
 }
 
-/** 보기 번호 추출 (① → ①, "1" → 가능하면 원문자 매핑은 하지 않고 원문 비교) */
+/** 보기 번호 정규화 (공백 제거). 채점 비교는 choiceKey 사용 */
 function normalizeChoice(s: string): string {
   return s.replace(/\s+/g, '').trim();
 }
 
 export function checkExamAnswer(q: ExamQuestion, submitted: string): boolean {
-  const kind = getInputKind(q.question_type);
+  const kind = getInputKind(q.question_type, q.options);
   const correct = q.answer ?? '';
   if (kind === 'text') {
     return normalizeText(submitted) === normalizeText(correct);
   }
   if (kind === 'choice') {
-    // 번호 exact (② vs 2 등은 1차에서 exact만)
+    // 가이드 v.5.3: 객관식 answer는 번호만. "②"와 "2"를 동일하게 인정
     const sub = normalizeChoice(submitted);
     const ans = normalizeChoice(correct);
     if (sub === ans) return true;
-    // 보기 전체 문자열을 고른 경우: "② 老人" → 앞 번호만 비교
-    const m = sub.match(/^[①②③④⑤⑥⑦⑧⑨⑩⑫]/);
-    if (m && m[0] === ans) return true;
+    if (choiceKey(sub) && choiceKey(sub) === choiceKey(ans)) return true;
     return false;
   }
   // 한자(단·복수 글자): NFKC 정규화 후 비교 (호환 한자 ↔ 표준 한자)
@@ -176,7 +216,7 @@ export default function ExamPlayer({
   const padRef = useRef<HandwritingPadHandle>(null);
   const total = questions.length;
   const current = questions[index] ?? null;
-  const kind = current ? getInputKind(current.question_type) : 'text';
+  const kind = current ? getInputKind(current.question_type, current.options) : 'text';
   const progressLabel = total > 0 ? `${index + 1} / ${total}` : '';
 
   /** 필터에 따른 표시용 문항 index 목록 (0-based) */
@@ -440,7 +480,7 @@ export default function ExamPlayer({
                     <p
                       className={`font-bold leading-tight break-all ${
                         hasHanja(q.answer_display || q.answer)
-                          ? 'text-5xl sm:text-7xl md:text-8xl'
+                          ? 'text-[1.47rem] sm:text-[2.205rem] md:text-[2.94rem]'
                           : 'text-2xl sm:text-3xl md:text-4xl'
                       }`}
                     >
@@ -681,9 +721,11 @@ export default function ExamPlayer({
                       if (e.key === 'Enter') handleTextSubmit();
                     }}
                     placeholder={
-                      current.question_type === 'hunum'
+                      current.question_type === 'huneum_W'
                         ? '예: 깊을 심'
-                        : '독음을 입력하세요'
+                        : current.question_type === 'mean_W'
+                          ? '뜻을 입력하세요'
+                          : '독음을 입력하세요'
                     }
                     className="w-full text-center text-xl sm:text-2xl font-medium py-3 sm:py-4 border-2 border-indigo-200 focus:border-indigo-500 rounded-xl sm:rounded-2xl outline-none"
                     autoFocus
@@ -845,11 +887,11 @@ export default function ExamPlayer({
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 text-center">
                     <p className="text-sm opacity-80 mb-1">정답</p>
-                    {/* 한자 정답만 2배, 한글(독음·훈음 등)은 기존 크기 유지 */}
+                    {/* 한자 정답: 기존 2배 크기의 70%, 한글(독음·훈음 등)은 기존 크기 유지 */}
                     <p
                       className={`font-bold leading-tight break-all ${
                         hasHanja(current.answer_display || current.answer)
-                          ? 'text-6xl sm:text-8xl md:text-9xl'
+                          ? 'text-[1.8375rem] sm:text-[2.94rem] md:text-[3.92rem]'
                           : 'text-3xl sm:text-4xl md:text-5xl'
                       }`}
                     >
@@ -946,12 +988,12 @@ function extractHanjaOnly(s: string): string {
 }
 
 /**
- * 기출 유형별 네이버 한자사전 검색어.
- * - 독음/뜻고르기/단어뜻: target 한자(어)
- * - 훈음/부수/약자: target 한자
- * - 장음: 정답 번호에 해당하는 보기 한자어
- * - 반의·상대/유의: 빈칸 위치에 따라 target+정답 결합
- * - 동음/한자어쓰기: 정답 한자어
+ * 기출 유형별 네이버 한자사전 검색어 (Master v.3).
+ * - 독음/뜻/한자 제시: target 한자(어)
+ * - 훈음/부수/약자/획순: target 한자
+ * - 장음·객관식: 정답 번호에 해당하는 보기 한자어
+ * - 반의·유의 쓰기: 빈칸 위치에 따라 target+정답 결합
+ * - 동음어/한자어 쓰기: 정답 한자어
  * - 성어: target의 (훈) 자리를 정답 한자로 채운 사자성어
  */
 function getExamDictQuery(q: ExamQuestion): string {
@@ -961,41 +1003,48 @@ function getExamDictQuery(q: ExamQuestion): string {
   const answerDisp = (q.answer_display || answer).trim();
 
   switch (type) {
-    case 'dokum':
-    case 'uut_select':
-    case 'mean':
-    case 'mean_select':
-    case 'select_hanja':
-    case 'select_hun':
-    case 'select_eum':
+    case 'dokeum_W':
+    case 'mean_W':
+    case 'mean_S':
+    case 'hanja_S':
+    case 'hun_S':
+    case 'eum_S':
       return target || extractHanjaOnly(q.question_text || '');
 
-    case 'select_hanjaeo':
-      // 밑줄 한글 단어 → 漢字語 보기 선택: 정답 보기의 한자어를 사전 검색
+    case 'hanjaeo_(eum)_S':
+    case 'hanjaeo_(mean)_S':
+      // 밑줄 한글/뜻 → 漢字語 보기 선택: 정답 보기의 한자어를 사전 검색
       return extractJangumDictWord(q) || extractHanjaOnly(answerDisp || target) || target;
 
-    case 'hunum':
-    case 'bushu':
-    case 'yakja':
-    case 'stroke':
+    case 'huneum_W':
+    case 'busu_W':
+    case 'yakja_W':
+    case 'stroke_S':
+    case 'hanja_W':
       return target;
 
-    case 'jangum':
-    case 'banui_select':
-    case 'invalid':
+    case 'jangeum_S':
+    case 'banui_S':
+    case 'banuiset_S':
+    case 'dongeum_S':
+    case 'dongeumeo_S':
+    case 'yui_S':
+    case 'seongeo_S':
+    case 'invalid_S':
       // 정답 번호에 해당하는 보기에서 한자 추출
       return extractJangumDictWord(q) || target;
 
-    case 'banui':
-    case 'yui':
+    case 'banui_W':
+    case 'yui_W':
+    case 'yuieo_W':
       return combineBlankWithTarget(q);
 
-    case 'dongeum':
-    case 'hanjaeo_write':
-    case 'mean_to_hanjaeo':
+    case 'dongeumeo_W':
+    case 'hanjaeo_W':
+    case 'banuieo_W':
       return extractHanjaOnly(answerDisp || answer) || answerDisp || answer;
 
-    case 'seong-eo':
+    case 'seongeo_W':
       return completeSeongEoDictWord(q);
 
     default:
@@ -1003,12 +1052,15 @@ function getExamDictQuery(q: ExamQuestion): string {
   }
 }
 
-/** 장음: 정답 번호(①②…)에 해당하는 보기에서 한자어 추출 */
+/** 장음 등 객관식: 정답 번호(①②… 또는 2)에 해당하는 보기에서 한자어 추출 */
 function extractJangumDictWord(q: ExamQuestion): string {
   const opts = q.options ?? [];
   const ans = (q.answer || '').trim();
   if (!ans || opts.length === 0) return '';
-  const hit = opts.find((o) => o.trim().startsWith(ans));
+  const ansKey = choiceKey(ans);
+  const hit =
+    opts.find((o) => o.trim().startsWith(ans)) ||
+    opts.find((o) => choiceKey(o) === ansKey);
   if (!hit) return '';
   // "② 老人" → 老人
   const rest = hit.replace(/^[①②③④⑤⑥⑦⑧⑨⑩⑪⑫]\s*/, '').trim();
@@ -1085,8 +1137,54 @@ function ChoiceOptionLabel({ text }: { text: string }) {
   );
 }
 
+/**
+ * question_text 안에서 target 구간을 찾는다.
+ * - 정확 일치 우선 (dokeum_W 등)
+ * - 실패 시 빈칸 공백 수 차이("( )" vs "(        )")와 ↔/- 표기 차이를 허용
+ *   (banuieo_W, yuieo_W, seongeo_W, yui_W, banui_W)
+ */
+function findTargetHighlightSpan(
+  text: string,
+  target: string
+): { start: number; end: number } | null {
+  if (!text || !target) return null;
+  const exact = text.indexOf(target);
+  if (exact >= 0) return { start: exact, end: exact + target.length };
+
+  const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  let pattern = '';
+  let i = 0;
+  while (i < target.length) {
+    const rest = target.slice(i);
+    const blank = rest.match(/^[（(]\s*[）)]/);
+    if (blank) {
+      pattern += '[（(]\\s*[）)]';
+      i += blank[0].length;
+      continue;
+    }
+    const ch = target[i];
+    if (ch === '↔' || ch === '-' || ch === '–' || ch === '—') {
+      pattern += '[↔\\-–—]';
+      i += 1;
+      continue;
+    }
+    pattern += escapeRe(ch);
+    i += 1;
+  }
+  if (!pattern) return null;
+  try {
+    const m = text.match(new RegExp(pattern));
+    if (m && m.index != null && m[0]) {
+      return { start: m.index, end: m.index + m[0].length };
+    }
+  } catch {
+    return null;
+  }
+  return null;
+}
+
 /** 문제 본문 표시: target(한자)만 2배, 한글 문장은 기존 크기 유지
- *  획순(stroke): PDF에서 추출한 강조 획 이미지 표시
+ *  획순(stroke_S): PDF에서 추출한 강조 획 이미지 표시
  */
 function QuestionStem({ q, revealed }: { q: ExamQuestion; revealed: boolean }) {
   const text = q.question_text || '';
@@ -1095,7 +1193,7 @@ function QuestionStem({ q, revealed }: { q: ExamQuestion; revealed: boolean }) {
 
   // 획순: Backend가 내려준 image_path → API_BASE_URL로 원본 PNG 로드
   // 예: http://127.0.0.1:8000/exam-strokes/stroke_8_113_49.png
-  if (q.question_type === 'stroke') {
+  if (q.question_type === 'stroke_S') {
     const levelSlug: Record<string, string> = {
       '8급': '8',
       '7급': '7',
@@ -1161,12 +1259,12 @@ function QuestionStem({ q, revealed }: { q: ExamQuestion; revealed: boolean }) {
     );
   }
 
-  // jangum 등 본문 없는 경우
+  // jangeum_S 등 본문 없는 경우
   if (!text && !target) {
     return null;
   }
 
-  // target만 있는 경우 (hunum, bushu 등) — 한자 단독 표시 → 2배
+  // target만 있는 경우 (huneum_W, busu_W 등) — 한자 단독 표시 → 2배
   // 기존 text-5xl/6xl/7xl → text-[6rem]/[7.5rem]/[9rem]
   if (!text && target) {
     return (
@@ -1178,29 +1276,25 @@ function QuestionStem({ q, revealed }: { q: ExamQuestion; revealed: boolean }) {
     );
   }
 
-  // 문장 + target 강조: 한글 문장 크기 유지, 밑줄 한자(target)만 2배
-  // 문장: text-lg/xl/2xl 유지
-  // target: 약 2배 → text-4xl / text-[2.5rem] / text-5xl
-  if (text && target && text.includes(target)) {
-    const parts = text.split(target);
+  // 문장 + target 강조: 한글 문장 크기 유지, 본문 속 구간만 2배
+  const highlightSpan = text && target ? findTargetHighlightSpan(text, target) : null;
+  if (text && highlightSpan) {
+    const before = text.slice(0, highlightSpan.start);
+    const mid = text.slice(highlightSpan.start, highlightSpan.end);
+    const after = text.slice(highlightSpan.end);
     return (
       <p className="text-lg sm:text-xl md:text-2xl font-medium leading-relaxed text-gray-900 text-center my-3 sm:my-4">
-        {parts.map((part, i) => (
-          <span key={i}>
-            {part}
-            {i < parts.length - 1 && (
-              <span
-                className={`inline-block font-bold underline decoration-2 underline-offset-4 text-4xl sm:text-[2.5rem] md:text-5xl mx-0.5 align-middle leading-none ${
-                  revealed
-                    ? 'text-indigo-700 decoration-indigo-400'
-                    : 'text-indigo-600 decoration-indigo-300'
-                }`}
-              >
-                {target}
-              </span>
-            )}
-          </span>
-        ))}
+        {before}
+        <span
+          className={`inline-block font-bold underline decoration-2 underline-offset-4 text-4xl sm:text-[2.5rem] md:text-5xl mx-0.5 align-middle leading-none ${
+            revealed
+              ? 'text-indigo-700 decoration-indigo-400'
+              : 'text-indigo-600 decoration-indigo-300'
+          }`}
+        >
+          {mid}
+        </span>
+        {after}
       </p>
     );
   }

@@ -18,32 +18,37 @@ import pandas as pd
 exam_df: Optional[pd.DataFrame] = None
 
 # 유형 코드 → 표시용 한글 이름 (메타 API용)
-# v.2.0: 전 급수 지원을 위해 신규 유형 9종 추가 (2026-08-08)
+# Master data_v.3 / 추출 가이드 v.5.3 기준 29종 (_S=객관식, _W=주관식)
 TYPE_LABELS: Dict[str, str] = {
-    # 기존 (4급 기준)
-    "dokum": "독음 (讀音)",
-    "hunum": "훈·음",
-    "bushu": "부수",
-    "yakja": "약자",
-    "jangum": "장음",
-    "banui": "반의·상대",
-    "yui": "유의",
-    "dongeum": "동음어",
-    "uut_select": "뜻 고르기",
-    "seong-eo": "성어",
-    "hanjaeo_write": "한자어 쓰기",
-    "mean": "단어 뜻",
-    # 신규 (v.2.0)
-    "select_hanja": "한자 고르기",
-    "select_hun": "훈 고르기",
-    "select_eum": "음 고르기",
-    "select_hanjaeo": "한자어 고르기",  # 밑줄 한글 단어 → 漢字語 보기 선택 (7급II 43-44 등)
-    "stroke": "획순",
-    "banui_select": "반의어 고르기",
-    "mean_select": "뜻 맞는 한자어 고르기",
-    "mean_to_hanjaeo": "뜻을 보고 한자어 쓰기",
-    "invalid": "성립하지 않는 단어 고르기",
-    "hanmun": "한문 독해",
+    "banui_S": "반의 고르기",
+    "banui_W": "반의 쓰기",
+    "banuieo_W": "반의어 쓰기",
+    "banuiset_S": "반의 set 고르기",
+    "busu_W": "부수",
+    "dokeum_W": "독음",
+    "dongeum_S": "동음 고르기",
+    "dongeumeo_S": "동음어 고르기",
+    "dongeumeo_W": "동음어 쓰기",
+    "eum_S": "음 고르기",
+    "hanja_S": "한자 고르기",
+    "hanja_W": "한자 쓰기",
+    "hanjaeo_(eum)_S": "한자어 고르기(독음)",
+    "hanjaeo_(mean)_S": "한자어 고르기(뜻)",
+    "hanjaeo_W": "한자어 쓰기",
+    "hanmun": "한문",
+    "hun_S": "훈 고르기",
+    "huneum_W": "훈·음",
+    "invalid_S": "성립하지 않는 단어 고르기",
+    "jangeum_S": "장음",
+    "mean_S": "뜻 고르기",
+    "mean_W": "단어 뜻",
+    "seongeo_S": "성어 고르기",
+    "seongeo_W": "성어 쓰기",
+    "stroke_S": "획순",
+    "yakja_W": "약자",
+    "yui_S": "유의 고르기",
+    "yui_W": "유의 쓰기",
+    "yuieo_W": "유의어 쓰기",
 }
 
 
@@ -326,9 +331,9 @@ load_exam_data()
 if __name__ == "__main__":
     load_exam_data()
     print("levels:", get_levels())
-    print("sessions sample:", get_sessions("4급")[:3])
-    print("types:", get_types())
-    q = get_session_questions("4급", 113)
+    print("sessions sample:", get_sessions("3급II")[:3])
+    print("types:", get_types("3급II"))
+    q = get_session_questions("3급II", 113)
     print("113회 total:", q.get("total"), "first type:", q["questions"][0]["question_type"] if q.get("questions") else None)
-    r = get_random_questions("4급", count=5, types=["dokum", "hunum"])
+    r = get_random_questions("3급II", count=5, types=["dokeum_W", "huneum_W"])
     print("random sample types:", [x["question_type"] for x in r.get("questions", [])])
